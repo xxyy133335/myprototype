@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移库管理 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 移库页面样式 - 上下全宽布局 */
+        .transfer-vertical-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .transfer-block {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .transfer-block-header {
+            padding: 15px;
+            background: #fdfdfd;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .transfer-block-header-orange {
+            padding: 12px 15px;
+            background: #FFF8E1;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            color: var(--jc-warning-orange);
+            font-size: 14px;
+        }
+
+        .transfer-table-container {
+            flex: 1;
+            min-height: 200px;
+            max-height: 300px;
+            overflow: auto;
+            border: none;
+        }
+
+        .transfer-cart-container {
+            flex: 1;
+            min-height: 150px;
+            max-height: 300px;
+            overflow: auto;
+            border: none;
+        }
+
+        .transfer-footer {
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+            background: #fafafa;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .transfer-data-table {
+            font-size: 13px;
+        }
+
+        .transfer-data-table th,
+        .transfer-data-table td {
+            padding: 8px 12px;
+            white-space: nowrap;
+        }
+
+        .trf-sticky-op {
+            position: sticky;
+            right: 0;
+            background: #F8FAFC;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .trf-cart-sticky-qty {
+            position: sticky;
+            right: 310px;
+            background: #F8FAFC;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            min-width: 80px;
+        }
+
+        .trf-cart-sticky-wh {
+            position: sticky;
+            right: 165px;
+            background: #F8FAFC;
+            min-width: 140px;
+        }
+
+        .trf-cart-sticky-loc {
+            position: sticky;
+            right: 55px;
+            background: #F8FAFC;
+            min-width: 110px;
+        }
+
+        .trf-cart-sticky-remove {
+            position: sticky;
+            right: 0;
+            background: #F8FAFC;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            min-width: 50px;
+            text-align: center;
+        }
+
+        /* 高亮按钮 */
+        .btn-highlight-transfer {
+            background: var(--jc-highlight-yellow-bg);
+            border-color: var(--jc-highlight-yellow-border);
+            color: var(--jc-highlight-yellow-text);
+            font-weight: var(--jc-font-weight-bold);
+        }
+
+        .btn-highlight-transfer:hover {
+            background: var(--jc-highlight-yellow-border);
+        }
+
+        /* 内联输入档"*/
+        .trf-input {
+            padding: 4px 6px;
+            border: 1px solid var(--jc-warning-orange);
+            border-radius: 4px;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .trf-input-qty {
+            width: 60px;
+            text-align: center;
+        }
+
+        .trf-input-wh {
+            width: 120px;
+        }
+
+        .trf-input-loc {
+            width: 90px;
+        }
+
+        .trf-input.error {
+            border-color: var(--jc-danger-red);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="../802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="../dashboard.html" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inbound.html" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="outbound.html" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="transfer.html" class="nav-link active">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="query.html" class="nav-link">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inventory.html" class="nav-link planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="express.html" class="nav-link">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="scrap.html" class="nav-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="qrcode.html" class="nav-link">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="config.html" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="../dashboard.html">首页</a>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current">移库管理</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <!-- 页面标题 -->
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <div>
+                                <h1 class="page-title">移库管理</h1>
+                                <p class="page-description">物资库内位置转移管理</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 移库单"form-toolbar -->
+                    <div class="form-toolbar">
+                        <div class="toolbar-title">物料移库单"(检索清单流转模式"</div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-outline" id="downloadTransferTemplate">
+                                <i class="fas fa-download"></i> 导出移库模板
+                            </button>
+                            <button class="btn btn-highlight-transfer" id="batchImportBtn">
+                                <i class="fas fa-file-upload"></i> 多条移库 (导入)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 上下全宽布局 -->
+                    <div class="transfer-vertical-layout">
+
+                        <!-- 区块一：库存检索 -->
+                        <div class="transfer-block">
+                            <div class="transfer-block-header">
+                                <input type="text" class="form-control" id="searchKeyword" placeholder="模糊查询: 需移库的物料名称或编号" style="flex: 1;">
+                                <button class="btn btn-primary" id="searchBtn" style="margin: 0;">
+                                    <i class="fas fa-search"></i> 查库存 
+                                </button>
+                            </div>
+                            <div class="transfer-table-container">
+                                <table class="table transfer-data-table" id="inventoryTable">
+                                    <thead>
+                                        <tr>
+                                            <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>原入库数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>当前仓库</th><th>当前货位</th>
+                                            <th class="trf-sticky-op">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transferSearchResults">
+                                        <tr><td colspan="21" style="text-align:center;color:#999;padding:20px;">请输入关键词后点击查库存，或直接点击查库存显示全部</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 区块二：待移库清单 -->
+                        <div class="transfer-block">
+                            <div class="transfer-block-header-orange">
+                                <i class="fas fa-exchange-alt"></i>
+                                待移库清单"(<span id="transferCartCount">0</span>)
+                            </div>
+                            <div class="transfer-cart-container">
+                                <table class="table transfer-data-table" id="transferCartTable">
+                                    <thead>
+                                        <tr>
+                                            <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th style="color:var(--jc-warning-orange);">原数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>当前库存</th><th>账龄周期</th><th>呆滞周期</th><th>旧仓库</th><th>旧货位</th>
+                                            <th class="trf-cart-sticky-qty"><span style="color:var(--jc-warning-orange)">移库数量</span>*</th>
+                                            <th class="trf-cart-sticky-wh">新仓库"</th>
+                                            <th class="trf-cart-sticky-loc">新货位"</th>
+                                            <th class="trf-cart-sticky-remove">移除</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transferCartBody">
+                                        <tr><td colspan="24" style="text-align:center;color:#999;padding:20px;">请从上方库存检索区添加需要移库的物料</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="transfer-footer">
+                                <button class="btn btn-warning" id="submitTransferBtn" style="padding: 10px 30px; font-size: 14px; background: var(--jc-warning-orange); color: #fff; border-color: var(--jc-warning-orange);">
+                                    <i class="fas fa-check-double"></i> 确认信息并提交移库 
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 批量导入模态框 -->
+    <div class="modal-backdrop" id="batchModalBackdrop" onclick="closeBatchModal()"></div>
+    <div class="modal" id="batchModal" style="display: none;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-header">
+                <h5 class="modal-title">多条移库导入</h5>
+                <button class="modal-close" onclick="closeBatchModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <div class="batch-import-content">
+                    <div class="batch-import-template" style="display:flex; align-items:center; justify-content:space-between; padding: 16px; background: #f8fafc; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 16px;">
+                        <div class="batch-import-template-info" style="display:flex; align-items:center; gap:12px;">
+                            <i class="fas fa-file-excel" style="font-size:28px; color: #217346;"></i>
+                            <div>
+                                <div style="font-weight: 600;">移库导入模板</div>
+                                <div style="font-size: 13px; color: var(--jc-text-light);">请下载模板，按要求填写后上传</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline" id="downloadBatchTemplate">
+                            <i class="fas fa-download"></i> 下载模板
+                        </button>
+                    </div>
+
+                    <div class="batch-import-dropzone" id="batchDropZone" style="border: 2px dashed #ccc; border-radius: 8px; padding: 32px; text-align:center; cursor:pointer; transition: border-color 0.2s;">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 36px; color: var(--jc-primary-blue); margin-bottom: 12px; display:block;"></i>
+                        <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">点击或拖拽文件到此处上传</div>
+                        <div style="color: var(--jc-text-light); margin-bottom: 8px;">支持 Excel 格式 (.xlsx, .xls)</div>
+                        <div style="font-size: 12px; color: var(--jc-text-muted); margin-bottom: 16px;">文件大小不超运"10MB</div>
+                        <input type="file" id="batchFileInput" accept=".xlsx,.xls" style="display: none;">
+                        <button class="btn btn-primary" onclick="document.getElementById('batchFileInput').click()">
+                            <i class="fas fa-folder-open"></i> 选择文件
+                        </button>
+                    </div>
+
+                    <div id="batchPreview" style="display: none; margin-top: var(--jc-spacing-xl);">
+                        <div style="font-weight: 600; margin-bottom: var(--jc-spacing-md);">导入预览</div>
+                        <div class="table-container">
+                            <table class="table" id="batchPreviewTable">
+                                <thead>
+                                    <tr>
+                                        <th>行号</th>
+                                        <th>物料名称</th>
+                                        <th>原仓库</th>
+                                        <th>目标仓库</th>
+                                        <th>目标货位</th>
+                                        <th>状态</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="batchModalFooter" style="display: none;">
+                <button class="btn btn-secondary" onclick="closeBatchModal()">取消</button>
+                <button class="btn btn-primary" id="confirmBatchBtn">
+                    <i class="fas fa-check"></i> 确认导入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/data.js"></script>
+    <script>
+        // 检查登录状态 
+        if (!Users.isLoggedIn()) {
+            window.location.href = '../index.html';
+        }
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                const roleMap = { admin: '系统管理员', keeper: '仓管员', engineer: '工程师' };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+            }
+        }
+
+        // ===== 移库购物车逻辑 =====
+        let transferCart = [];
+
+        function renderTransferSearch(query) {
+            const inventory = Inventory.getAll().filter(item => item.remainingStock > 0);
+            const tbody = document.getElementById('transferSearchResults');
+            query = (query || '').trim().toLowerCase();
+            const filtered = query
+                ? inventory.filter(item =>
+                    item.materialName.toLowerCase().includes(query) ||
+                    (item.materialCode && item.materialCode.toLowerCase().includes(query))
+                  )
+                : inventory;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;color:#999;padding:20px;">未搜索到可移库的物料</td></tr>';
+                window._transferSearchFiltered = [];
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, index) => `
+                <tr>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.applicant || '-'}</td>
+                    <td>${item.projectNo || '-'}</td>
+                    <td>${item.pbu || '-'}</td>
+                    <td>${item.exempt3c || '-'}</td>
+                    <td>${item.materialCategory || '-'}</td>
+                    <td>${item.owner || '-'}</td>
+                    <td>${item.department || '-'}</td>
+                    <td>${item.poNo || '-'}</td>
+                    <td>${item.supplierCode || '-'}</td>
+                    <td>${item.quantity || '-'}</td>
+                    <td>${item.unit || '-'}</td>
+                    <td>${item.inboundTime ? DateUtils.format(item.inboundTime, 'YYYY-MM-DD') : '-'}</td>
+                    <td>${item.inboundNo || '-'}</td>
+                    <td><span style="color:var(--jc-success-green);font-weight:600;">${item.remainingStock}</span></td>
+                    <td>${item.agingCycle || '-'}</td>
+                    <td>${item.staleCycle || '-'}</td>
+                    <td>${item.warehouse || '-'}</td>
+                    <td>${item.location || '-'}</td>
+                    <td class="trf-sticky-op">
+                        <button class="btn btn-sm" onclick="addToTransferCart(${index})" style="padding:4px 10px;font-size:12px;margin:0 auto;color:var(--jc-warning-orange);border:1px solid var(--jc-warning-orange);background:#fff;border-radius:4px;cursor:pointer;">
+                            <i class="fas fa-plus"></i> 加入清单
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            window._transferSearchFiltered = filtered;
+        }
+
+        function addToTransferCart(rowIndex) {
+            const filtered = window._transferSearchFiltered || Inventory.getAll().filter(item => item.remainingStock > 0);
+            const item = filtered[rowIndex];
+            if (!item) return;
+
+            const existing = transferCart.find(c => c.inboundNo === item.inboundNo);
+            if (existing) {
+                Toast.error('该物料批次已在移库清单中，请勿重复添加！');
+                return;
+            }
+
+            transferCart.push({ ...item, trfQty: 1, newWh: '', newLoc: '' });
+            renderTransferCart();
+            Toast.success(`已将 [${item.materialName}] 加入待移库清单`);
+        }
+
+        function removeFromTransferCart(index) {
+            transferCart.splice(index, 1);
+            renderTransferCart();
+        }
+
+        function renderTransferCart() {
+            const tbody = document.getElementById('transferCartBody');
+            const countEl = document.getElementById('transferCartCount');
+            countEl.textContent = transferCart.length;
+
+            if (transferCart.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="24" style="text-align:center;color:#999;padding:20px;">请从上方库存检索区添加需要移库的物料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = transferCart.map((item, index) => `
+                <tr>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.applicant || '-'}</td>
+                    <td>${item.projectNo || '-'}</td>
+                    <td>${item.pbu || '-'}</td>
+                    <td>${item.exempt3c || '-'}</td>
+                    <td>${item.materialCategory || '-'}</td>
+                    <td>${item.owner || '-'}</td>
+                    <td>${item.department || '-'}</td>
+                    <td>${item.poNo || '-'}</td>
+                    <td>${item.supplierCode || '-'}</td>
+                    <td><span style="color:var(--jc-warning-orange);">${item.quantity || '-'}</span></td>
+                    <td>${item.unit || '-'}</td>
+                    <td>${item.inboundTime ? DateUtils.format(item.inboundTime, 'YYYY-MM-DD') : '-'}</td>
+                    <td>${item.inboundNo || '-'}</td>
+                    <td>${item.remainingStock}</td>
+                    <td>${item.agingCycle || '-'}</td>
+                    <td>${item.staleCycle || '-'}</td>
+                    <td>${item.warehouse || '-'}</td>
+                    <td>${item.location || '-'}</td>
+                    <td class="trf-cart-sticky-qty">
+                        <input type="number" id="trf-qty-${index}" class="trf-input trf-input-qty"
+                               min="1" max="${item.remainingStock}" value="${item.trfQty}">
+                    </td>
+                    <td class="trf-cart-sticky-wh">
+                        <select id="trf-wh-${index}" class="trf-input trf-input-wh">
+                            <option value="">请选择</option>
+                            <option value="A" ${item.newWh==='A'?'selected':''}>A</option>
+                            <option value="B" ${item.newWh==='B'?'selected':''}>B</option>
+                            <option value="C" ${item.newWh==='C'?'selected':''}>C</option>
+                            <option value="D" ${item.newWh==='D'?'selected':''}>D</option>
+                            <option value="E" ${item.newWh==='E'?'selected':''}>E</option>
+                            <option value="F" ${item.newWh==='F'?'selected':''}>F</option>
+                            <option value="研发中心实验室仓" ${item.newWh==='研发中心实验室仓'?'selected':''}>研发中心实验室仓</option>
+                            <option value="原材料一仓" ${item.newWh==='原材料一仓'?'selected':''}>原材料一仓</option>
+                            <option value="样机中转仓" ${item.newWh==='样机中转仓'?'selected':''}>样机中转仓</option>
+                        </select>
+                    </td>
+                    <td class="trf-cart-sticky-loc">
+                        <input type="text" id="trf-loc-${index}" class="trf-input trf-input-loc"
+                               value="${item.newLoc}" placeholder="如  B-1-0">
+                    </td>
+                    <td class="trf-cart-sticky-remove">
+                        <i class="fas fa-times-circle" style="color:var(--jc-danger-red);cursor:pointer;font-size:16px;"
+                           onclick="removeFromTransferCart(${index})" title="移除"></i>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 搜索按钮 & Enter错 
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            renderTransferSearch(document.getElementById('searchKeyword').value);
+        });
+        document.getElementById('searchKeyword').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') renderTransferSearch(this.value);
+        });
+
+        // 提交移库
+        document.getElementById('submitTransferBtn').addEventListener('click', function() {
+            if (transferCart.length === 0) {
+                Toast.error('移库清单为空，请先添加需要移库的物料）');
+                return;
+            }
+
+            let isValid = true;
+            transferCart.forEach((item, index) => {
+                const qtyInput = document.getElementById(`trf-qty-${index}`);
+                const whInput  = document.getElementById(`trf-wh-${index}`);
+                const locInput = document.getElementById(`trf-loc-${index}`);
+
+                const qty = parseInt(qtyInput.value);
+                const wh  = whInput.value;
+                const loc = locInput.value.trim();
+
+                if (isNaN(qty) || qty <= 0 || qty > item.remainingStock) {
+                    isValid = false; qtyInput.classList.add('error');
+                } else { qtyInput.classList.remove('error'); }
+
+                if (!wh) {
+                    isValid = false; whInput.classList.add('error');
+                } else { whInput.classList.remove('error'); }
+
+                if (!loc) {
+                    isValid = false; locInput.classList.add('error');
+                } else { locInput.classList.remove('error'); }
+
+                item.trfQty = qty;
+                item.newWh  = wh;
+                item.newLoc = loc;
+            });
+
+            if (!isValid) {
+                Toast.error('请完善所有必填的移库数量与新目标库位信息）');
+                return;
+            }
+
+            ButtonUtils.setLoading(this, '系统流转处理中...');
+            const btn = this;
+            setTimeout(() => {
+                const user = Users.getCurrentUser();
+                transferCart.forEach(item => {
+                    Inventory.update(item.id, { warehouse: item.newWh, location: item.newLoc });
+                    Flows.create('transfer', {
+                        materialName: item.materialName,
+                        fromWarehouse: item.warehouse,
+                        fromLocation: item.location,
+                        toWarehouse: item.newWh,
+                        toLocation: item.newLoc,
+                        trfQty: item.trfQty,
+                        operator: user ? user.name : '-'
+                    });
+                });
+                transferCart = [];
+                renderTransferCart();
+                ButtonUtils.setSuccess(btn, '提交成功');
+                Toast.success('操作成功！物料已成功分配至新库位。');
+            }, 800);
+        });
+
+        // ===== 批量导入模态框 =====
+        document.getElementById('batchImportBtn').addEventListener('click', function() {
+            const modal    = document.getElementById('batchModal');
+            const backdrop = document.getElementById('batchModalBackdrop');
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+                backdrop.classList.add('show');
+            });
+        });
+
+        function closeBatchModal() {
+            const modal    = document.getElementById('batchModal');
+            const backdrop = document.getElementById('batchModalBackdrop');
+            modal.classList.remove('show');
+            backdrop.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.getElementById('batchPreview').style.display = 'none';
+                document.getElementById('batchModalFooter').style.display = 'none';
+            }, 300);
+        }
+
+        document.getElementById('downloadBatchTemplate').addEventListener('click', function() {
+            ButtonUtils.setLoading(this, '下载中...');
+            setTimeout(() => {
+                ButtonUtils.setSuccess(this, '下载成功');
+                Toast.success('批量移库模板下载成功');
+            }, 800);
+        });
+
+        document.getElementById('downloadTransferTemplate').addEventListener('click', function() {
+            ButtonUtils.setLoading(this, '下载中...');
+            setTimeout(() => {
+                ButtonUtils.setSuccess(this, '下载成功');
+                Toast.success('移库模板下载成功');
+            }, 800);
+        });
+
+        const batchFileInput = document.getElementById('batchFileInput');
+        const batchDropZone  = document.getElementById('batchDropZone');
+
+        batchFileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) handleBatchFile(e.target.files[0]);
+        });
+        batchDropZone.addEventListener('dragover', (e) => { e.preventDefault(); batchDropZone.classList.add('dragover'); });
+        batchDropZone.addEventListener('dragleave', () => { batchDropZone.classList.remove('dragover'); });
+        batchDropZone.addEventListener('drop', (e) => {
+            e.preventDefault(); batchDropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) handleBatchFile(e.dataTransfer.files[0]);
+        });
+
+
+        function handleBatchFile(file) {
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!['xlsx', 'xls'].includes(ext)) {
+                Toast.error('请上会"Excel 格式文件 (.xlsx, .xls)');
+                return;
+            }
+            Toast.success(`文件 "${file.name}" 读取成功`);
+            const mockData = [
+                { row: 1, name: '室外机"1.5P',   from: 'A', to: 'B', location: 'B-1-2-3-4', status: 'valid' },
+                { row: 2, name: '压缩机"1.5P',   from: 'B', to: 'C', location: 'C-2-3-4-5', status: 'valid' },
+                { row: 3, name: '控制箱"标准型', from: 'C', to: 'D', location: 'D-3-4-5-6', status: 'warning' },
+            ];
+            const tbody = document.querySelector('#batchPreviewTable tbody');
+            tbody.innerHTML = mockData.map(item => `
+                <tr>
+                    <td>${item.row}</td><td>${item.name}</td><td>${item.from}</td>
+                    <td>${item.to}</td><td>${item.location}</td>
+                    <td>${item.status === 'valid'
+                        ? '<span class="tag green"><i class="fas fa-check"></i> 有效</span>'
+                        : '<span class="tag orange"><i class="fas fa-exclamation"></i> 需确认</span>'}
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('batchPreview').style.display = 'block';
+            document.getElementById('batchModalFooter').style.display = 'flex';
+        }
+
+        document.getElementById('confirmBatchBtn').addEventListener('click', function() {
+            ButtonUtils.setLoading(this, '导入中...');
+            setTimeout(() => {
+                ButtonUtils.setSuccess(this, '导入成功');
+                Toast.success('批量移库导入成功，共处理 3 条记录');
+                setTimeout(() => closeBatchModal(), 1500);
+            }, 1200);
+        });
+
+        // ===== 侧边栏"& 退出"=====
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => { window.location.href = '../index.html'; }, 500);
+            });
+        });
+
+        // 初始区 
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            renderTransferSearch('');
+            renderTransferCart();
+        });
+    </script>
+</body>
+</html>

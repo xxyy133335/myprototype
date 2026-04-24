@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仓库配置 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .config-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--jc-spacing-xl);
+            flex-wrap: wrap;
+            gap: var(--jc-spacing-md);
+        }
+
+        .config-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-md);
+        }
+
+        .config-stats {
+            display: flex;
+            gap: var(--jc-spacing-xl);
+            margin-bottom: var(--jc-spacing-xl);
+        }
+
+        .config-stat-card {
+            flex: 1;
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            padding: var(--jc-spacing-xl);
+            box-shadow: var(--jc-shadow-card);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-lg);
+        }
+
+        .config-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--jc-radius-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .config-stat-icon.blue {
+            background: var(--jc-accent-teal-light);
+            color: var(--jc-accent-teal);
+        }
+
+        .config-stat-icon.orange {
+            background: var(--jc-warning-orange-light);
+            color: var(--jc-warning-orange);
+        }
+
+        .config-stat-icon.green {
+            background: var(--jc-success-green-light);
+            color: var(--jc-success-green);
+        }
+
+        .config-stat-info h4 {
+            font-size: var(--jc-font-size-small);
+            color: var(--jc-text-light);
+            margin-bottom: 4px;
+        }
+
+        .config-stat-info .stat-value {
+            font-size: 24px;
+            font-weight: var(--jc-font-weight-bold);
+            color: var(--jc-text-dark);
+        }
+
+        .attr-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: var(--jc-radius-tag);
+            font-size: var(--jc-font-size-small);
+            font-weight: var(--jc-font-weight-semibold);
+        }
+
+        .attr-tag.indoor-closed { background: var(--jc-tag-blue-bg); color: var(--jc-tag-blue-text); }
+        .attr-tag.indoor-semi { background: var(--jc-tag-green-bg); color: var(--jc-tag-green-text); }
+        .attr-tag.indoor-open { background: var(--jc-tag-orange-bg); color: var(--jc-tag-orange-text); }
+        .attr-tag.outdoor-closed { background: var(--jc-tag-purple-bg); color: var(--jc-tag-purple-text); }
+        .attr-tag.outdoor-semi { background: var(--jc-tag-green-bg); color: var(--jc-tag-green-text); }
+        .attr-tag.outdoor-open { background: var(--jc-tag-orange-bg); color: var(--jc-tag-orange-text); }
+
+        .type-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: var(--jc-radius-tag);
+            font-size: var(--jc-font-size-small);
+            font-weight: var(--jc-font-weight-semibold);
+            background: var(--jc-bg-gray);
+            color: var(--jc-text-dark);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .status-dot.active { background: var(--jc-success-green); }
+        .status-dot.inactive { background: var(--jc-text-muted); }
+
+        .modal-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--jc-spacing-lg);
+        }
+
+        .modal-form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        .modal-form-full {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="../802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="../dashboard.html" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inbound.html" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="outbound.html" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="transfer.html" class="nav-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="query.html" class="nav-link">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inventory.html" class="nav-link planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="express.html" class="nav-link">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="scrap.html" class="nav-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="qrcode.html" class="nav-link">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="config.html" class="nav-link active">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 class="page-title">仓库配置</h1>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <!-- Tab 导航 -->
+                    <div class="tabs" id="configTabs">
+                        <div class="tab-item active" data-tab="warehouse">
+                            <i class="fas fa-warehouse"></i> 仓库管理
+                        </div>
+                        <div class="tab-item" data-tab="location">
+                            <i class="fas fa-th"></i> 库位管理
+                        </div>
+                    </div>
+
+                    <!-- ==================== 仓库管理 Tab ==================== -->
+                    <div class="tab-content active" id="tabWarehouse">
+                        <!-- 统计卡片 -->
+                        <div class="config-stats">
+                            <div class="config-stat-card">
+                                <div class="config-stat-icon blue">
+                                    <i class="fas fa-warehouse"></i>
+                                </div>
+                                <div class="config-stat-info">
+                                    <h4>仓库总数</h4>
+                                    <div class="stat-value" id="whTotalCount">0</div>
+                                </div>
+                            </div>
+                            <div class="config-stat-card">
+                                <div class="config-stat-icon orange">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="config-stat-info">
+                                    <h4>室内仓库</h4>
+                                    <div class="stat-value" id="whIndoorCount">0</div>
+                                </div>
+                            </div>
+                            <div class="config-stat-card">
+                                <div class="config-stat-icon green">
+                                    <i class="fas fa-tree"></i>
+                                </div>
+                                <div class="config-stat-info">
+                                    <h4>室外仓库</h4>
+                                    <div class="stat-value" id="whOutdoorCount">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 工具栏 -->
+                        <div class="config-toolbar">
+                            <div class="config-toolbar-left">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="form-control" id="whSearchInput" placeholder="搜索仓库名称、位置、属性...">
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-primary" id="btnAddWarehouse">
+                                    <i class="fas fa-plus"></i> 新增仓库
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 仓库表格 -->
+                        <div class="table-container">
+                            <table class="table" id="warehouseTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px">序号</th>
+                                        <th>仓库名称</th>
+                                        <th>位置</th>
+                                        <th>属性</th>
+                                        <th>类型</th>
+                                        <th>创建时间</th>
+                                        <th style="width:140px">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="warehouseTableBody">
+                                </tbody>
+                            </table>
+                            <div class="table-pagination" id="whPagination">
+                                <div class="pagination-info" id="whPageInfo">共 0 条记录</div>
+                                <div class="pagination-controls" id="whPageControls"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== 库位管理 Tab ==================== -->
+                    <div class="tab-content" id="tabLocation">
+                        <!-- 工具栏 -->
+                        <div class="config-toolbar">
+                            <div class="config-toolbar-left">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" class="form-control" id="locSearchInput" placeholder="搜索库位编号、负责人员...">
+                                </div>
+                                <select class="form-control" id="locWarehouseFilter" style="width:160px">
+                                    <option value="">全部仓库</option>
+                                </select>
+                            </div>
+                            <div style="display:flex;gap:var(--jc-spacing-md)">
+                                <button class="btn btn-outline" id="btnBatchAddLocation">
+                                    <i class="fas fa-layer-group"></i> 批量新增
+                                </button>
+                                <button class="btn btn-primary" id="btnAddLocation">
+                                    <i class="fas fa-plus"></i> 新增库位
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 批量操作栏 -->
+                        <div class="config-toolbar" id="locBatchBar" style="display:none;background:var(--jc-bg-gray);padding:12px 16px;border-radius:var(--jc-radius-control);margin-bottom:var(--jc-spacing-lg)">
+                            <div style="display:flex;align-items:center;gap:var(--jc-spacing-md)">
+                                <input type="checkbox" id="locSelectAll" style="width:18px;height:18px;cursor:pointer">
+                                <label for="locSelectAll" style="cursor:pointer;font-size:var(--jc-font-size-body);color:var(--jc-text-dark)">全选</label>
+                                <span style="color:var(--jc-text-light);font-size:var(--jc-font-size-small)">已选 <strong id="locSelectedCount" style="color:var(--jc-accent-teal)">0</strong> 项</span>
+                            </div>
+                            <button class="btn btn-danger btn-sm" id="btnBatchDeleteLocation" disabled>
+                                <i class="fas fa-trash"></i> 批量删除
+                            </button>
+                        </div>
+
+                        <!-- 库位表格 -->
+                        <div class="table-container">
+                            <table class="table" id="locationTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40px"><input type="checkbox" id="locHeadCheck" style="width:16px;height:16px;cursor:pointer"></th>
+                                        <th style="width:50px">序号</th>
+                                        <th>仓库名称</th>
+                                        <th>库位编号</th>
+                                        <th>负责人员</th>
+                                        <th>库位尺寸</th>
+                                        <th>库位容量</th>
+                                        <th>剩余容量</th>
+                                        <th>创建时间</th>
+                                        <th style="width:140px">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="locationTableBody">
+                                </tbody>
+                            </table>
+                            <div class="table-pagination" id="locPagination">
+                                <div class="pagination-info" id="locPageInfo">共 0 条记录</div>
+                                <div class="pagination-controls" id="locPageControls"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/data.js"></script>
+    <script>
+        // ====================登录检查"===================
+        if (!Users.isLoggedIn()) {
+            window.location.href = '../index.html';
+        }
+
+        // ====================用户信息====================
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                const roleMap = { admin: '系统管理员', keeper: '仓管员', engineer: '工程师' };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+            }
+        }
+
+        // ====================仓库管理模块====================
+        const WHModule = {
+            currentPage: 1,
+            pageSize: 10,
+            keyword: '',
+            editingId: null,
+
+            // 属性标签样式映射 
+            attrClassMap: {
+                '室内/封闭': 'indoor-closed',
+                '室内/半封闭': 'indoor-semi',
+                '室内/不封闭': 'indoor-open',
+                '室外/封闭': 'outdoor-closed',
+                '室外/半封闭': 'outdoor-semi',
+                '室外/不封闭': 'outdoor-open'
+            },
+
+            attrIconMap: {
+                '室内/封闭': 'fa-home',
+                '室内/半封闭': 'fa-home',
+                '室内/不封闭': 'fa-home',
+                '室外/封闭': 'fa-sun',
+                '室外/半封闭': 'fa-sun',
+                '室外/不封闭': 'fa-sun'
+            },
+
+            init() {
+                this.bindSearch();
+                this.render();
+                this.updateStats();
+            },
+
+            updateStats() {
+                const all = Warehouses.getAll();
+                document.getElementById('whTotalCount').textContent = all.length;
+                document.getElementById('whIndoorCount').textContent = all.filter(w => w.attribute.startsWith('室内')).length;
+                document.getElementById('whOutdoorCount').textContent = all.filter(w => w.attribute.startsWith('室外')).length;
+            },
+
+            bindSearch() {
+                const input = document.getElementById('whSearchInput');
+                input.addEventListener('input', debounce(() => {
+                    this.keyword = input.value.trim();
+                    this.currentPage = 1;
+                    this.render();
+                }, 300));
+            },
+
+            render() {
+                const data = Warehouses.search(this.keyword);
+                const total = data.length;
+                const start = (this.currentPage - 1) * this.pageSize;
+                const pageData = data.slice(start, start + this.pageSize);
+
+                const tbody = document.getElementById('warehouseTableBody');
+                tbody.innerHTML = '';
+
+                if (pageData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--jc-text-muted)">暂无仓库数据</td></tr>`;
+                } else {
+                    pageData.forEach((wh, idx) => {
+                        const attrClass = this.attrClassMap[wh.attribute] || 'indoor-closed';
+                        const attrIcon = this.attrIconMap[wh.attribute] || 'fa-home';
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${start + idx + 1}</td>
+                            <td><strong style="font-size:16px;color:var(--jc-text-dark);letter-spacing:1px">${wh.name}</strong></td>
+                            <td style="color:var(--jc-text-light)">${wh.location}</td>
+                            <td><span class="attr-tag ${attrClass}"><i class="fas ${attrIcon}"></i>${wh.attribute}</span></td>
+                            <td><span class="type-tag"><i class="fas fa-layer-group"></i> ${wh.type}</span></td>
+                            <td style="color:var(--jc-text-light);font-size:13px">${DateUtils.format(wh.createTime, 'YYYY-MM-DD')}</td>
+                            <td>
+                                <div class="table-actions">
+                                    <button class="btn btn-outline btn-sm" onclick="WHModule.openEdit(${wh.id})"><i class="fas fa-edit"></i> 编辑</button>
+                                    <button class="btn btn-danger btn-sm" onclick="WHModule.confirmDelete(${wh.id})"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+                // 分页
+                document.getElementById('whPageInfo').textContent = `共 ${total} 条记录`;
+                this.renderPagination(total);
+            },
+
+            renderPagination(total) {
+                const totalPages = Math.ceil(total / this.pageSize);
+                const controls = document.getElementById('whPageControls');
+                controls.innerHTML = '';
+
+                if (totalPages <= 1) return;
+
+                const prev = document.createElement('button');
+                prev.className = 'pagination-btn';
+                prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                prev.disabled = this.currentPage === 1;
+                prev.onclick = () => { this.currentPage--; this.render(); };
+                controls.appendChild(prev);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = `pagination-btn${i === this.currentPage ? ' active' : ''}`;
+                    btn.textContent = i;
+                    btn.onclick = () => { this.currentPage = i; this.render(); };
+                    controls.appendChild(btn);
+                }
+
+                const next = document.createElement('button');
+                next.className = 'pagination-btn';
+                next.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                next.disabled = this.currentPage === totalPages;
+                next.onclick = () => { this.currentPage++; this.render(); };
+                controls.appendChild(next);
+            },
+
+            openAdd() {
+                this.editingId = null;
+                this.showModal();
+            },
+
+            openEdit(id) {
+                this.editingId = id;
+                const wh = Warehouses.getById(id);
+                if (!wh) return;
+                this.showModal(wh);
+            },
+
+            showModal(data = null) {
+                const isEdit = !!data;
+                const content = `
+                    <form id="warehouseForm" autocomplete="off">
+                        <div class="modal-form-row">
+                            <div class="form-group">
+                                <label class="form-label">仓库名称<span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" name="warehouseName"
+                                    placeholder="必填，且必须大写字母，如 A、MAIN"
+                                    value="${isEdit ? data.name : ''}"
+                                    data-label="仓库名称"
+                                    style="text-transform:uppercase">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">位置<span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" name="warehouseLocation"
+                                    placeholder="如：一号厂房东侧"
+                                    value="${isEdit ? data.location : ''}"
+                                    data-label="位置">
+                            </div>
+                        </div>
+                        <div class="modal-form-row">
+                            <div class="form-group">
+                                <label class="form-label">属性<span class="required-mark">*</span></label>
+                                <select class="form-control" name="warehouseAttribute" data-label="属性">
+                                    <option value="">请选择属性</option>
+                                    <option value="室内/封闭"${isEdit && data.attribute === '室内/封闭' ? ' selected' : ''}>室内/封闭</option>
+                                    <option value="室内/半封闭"${isEdit && data.attribute === '室内/半封闭' ? ' selected' : ''}>室内/半封闭</option>
+                                    <option value="室内/不封闭"${isEdit && data.attribute === '室内/不封闭' ? ' selected' : ''}>室内/不封闭</option>
+                                    <option value="室外/封闭"${isEdit && data.attribute === '室外/封闭' ? ' selected' : ''}>室外/封闭</option>
+                                    <option value="室外/半封闭"${isEdit && data.attribute === '室外/半封闭' ? ' selected' : ''}>室外/半封闭</option>
+                                    <option value="室外/不封闭"${isEdit && data.attribute === '室外/不封闭' ? ' selected' : ''}>室外/不封闭</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">类型<span class="required-mark">*</span></label>
+                                <select class="form-control" name="warehouseType" data-label="类型">
+                                    <option value="">请选择类型</option>
+                                    <option value="货架"${isEdit && data.type === '货架' ? ' selected' : ''}>货架</option>
+                                    <option value="地面"${isEdit && data.type === '地面' ? ' selected' : ''}>地面</option>
+                                    <option value="货架+地面"${isEdit && data.type === '货架+地面' ? ' selected' : ''}>货架+地面</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="padding:0;margin-top:var(--jc-spacing-xl);border:0">
+                            <button type="button" class="btn btn-secondary" onclick="Modal.close(this)">取消</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> ${isEdit ? '保存修改' : '新增仓库'}
+                            </button>
+                        </div>
+                    </form>
+                `;
+
+                const modal = Modal.open(content, {
+                    title: isEdit ? '编辑仓库' : '新增仓库',
+                    size: ''
+                });
+
+                // 名称输入自动转大决 
+                const nameInput = modal.querySelector('[name="warehouseName"]');
+                nameInput.addEventListener('input', function() {
+                    const pos = this.selectionStart;
+                    this.value = this.value.toUpperCase();
+                    this.setSelectionRange(pos, pos);
+                });
+
+                // 表单提交
+                const form = modal.querySelector('#warehouseForm');
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleSubmit(form);
+                });
+            },
+
+            handleSubmit(form) {
+                const result = Validation.validate(form, ValidationSchemas.warehouse);
+                if (!result.valid) return;
+
+                const name = form.querySelector('[name="warehouseName"]').value.trim().toUpperCase();
+                const location = form.querySelector('[name="warehouseLocation"]').value.trim();
+                const attribute = form.querySelector('[name="warehouseAttribute"]').value;
+                const type = form.querySelector('[name="warehouseType"]').value;
+
+                if (Warehouses.exists(name, this.editingId)) {
+                    FormUtils.setFieldError(form.querySelector('[name="warehouseName"]'), '仓库名称已存在，请更换名称');
+                    return;
+                }
+
+                if (this.editingId) {
+                    Warehouses.update(this.editingId, { name, location, attribute, type });
+                    Toast.success(`仓库「${name}」已更新`);
+                } else {
+                    Warehouses.add({ name, location, attribute, type });
+                    Toast.success(`仓库「${name}」新增成功`);
+                }
+
+                Modal.close(form.querySelector('.btn-secondary'));
+                this.render();
+                this.updateStats();
+                LOCModule.syncWarehouseFilter();
+            },
+
+            confirmDelete(id) {
+                const wh = Warehouses.getById(id);
+                if (!wh) return;
+                Modal.confirm(`确定要删除仓库「${wh.name}」？删除后无法恢复。`, () => {
+                    Warehouses.delete(id);
+                    Toast.success(`仓库「${wh.name}」已删除`);
+                    this.render();
+                    this.updateStats();
+                    LOCModule.syncWarehouseFilter();
+                });
+            }
+        };
+
+        // ====================库位管理模块====================
+        const LOCModule = {
+            currentPage: 1,
+            pageSize: 10,
+            keyword: '',
+            warehouseFilter: '',
+            editingId: null,
+            selectedIds: new Set(),
+
+            init() {
+                this.syncWarehouseFilter();
+                this.bindSearch();
+                this.bindBatchActions();
+                this.render();
+            },
+
+            syncWarehouseFilter() {
+                const sel = document.getElementById('locWarehouseFilter');
+                const current = sel.value;
+                sel.innerHTML = '<option value="">全部仓库</option>';
+                Warehouses.getAll().forEach(wh => {
+                    const opt = document.createElement('option');
+                    opt.value = wh.name;
+                    opt.textContent = wh.name;
+                    if (wh.name === current) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            },
+
+            bindSearch() {
+                const input = document.getElementById('locSearchInput');
+                input.addEventListener('input', debounce(() => {
+                    this.keyword = input.value.trim();
+                    this.currentPage = 1;
+                    this.render();
+                }, 300));
+
+                document.getElementById('locWarehouseFilter').addEventListener('change', (e) => {
+                    this.warehouseFilter = e.target.value;
+                    this.currentPage = 1;
+                    this.render();
+                });
+            },
+
+            bindBatchActions() {
+                // 表头全选 
+                document.getElementById('locHeadCheck').addEventListener('change', (e) => {
+                    const checked = e.target.checked;
+                    document.querySelectorAll('.loc-row-check').forEach(cb => {
+                        cb.checked = checked;
+                        const id = parseInt(cb.dataset.id);
+                        if (checked) this.selectedIds.add(id);
+                        else this.selectedIds.delete(id);
+                    });
+                    this.updateBatchBar();
+                });
+
+                // 批量操作栏全选 
+                document.getElementById('locSelectAll').addEventListener('change', (e) => {
+                    const checked = e.target.checked;
+                    document.getElementById('locHeadCheck').checked = checked;
+                    document.querySelectorAll('.loc-row-check').forEach(cb => {
+                        cb.checked = checked;
+                        const id = parseInt(cb.dataset.id);
+                        if (checked) this.selectedIds.add(id);
+                        else this.selectedIds.delete(id);
+                    });
+                    this.updateBatchBar();
+                });
+
+                // 批量删除按钮
+                document.getElementById('btnBatchDeleteLocation').addEventListener('click', () => {
+                    if (this.selectedIds.size === 0) return;
+                    Modal.confirm(`确定要删除选中的 ${this.selectedIds.size} 个库位？删除后无法恢复。`, () => {
+                        Locations.batchDelete(Array.from(this.selectedIds));
+                        Toast.success(`已删除 ${this.selectedIds.size} 个库位`);
+                        this.selectedIds.clear();
+                        this.updateBatchBar();
+                        this.render();
+                    });
+                });
+
+                // 批量新增按钮
+                document.getElementById('btnBatchAddLocation').addEventListener('click', () => {
+                    this.openBatchAdd();
+                });
+            },
+
+            updateBatchBar() {
+                const count = this.selectedIds.size;
+                document.getElementById('locSelectedCount').textContent = count;
+                document.getElementById('btnBatchDeleteLocation').disabled = count === 0;
+                const bar = document.getElementById('locBatchBar');
+                bar.style.display = count > 0 ? 'flex' : 'none';
+            },
+
+            getFilteredData() {
+                let data = Locations.search(this.keyword);
+                if (this.warehouseFilter) {
+                    data = data.filter(loc => loc.warehouseName === this.warehouseFilter);
+                }
+                return data;
+            },
+
+            render() {
+                const data = this.getFilteredData();
+                const total = data.length;
+                const start = (this.currentPage - 1) * this.pageSize;
+                const pageData = data.slice(start, start + this.pageSize);
+
+                const tbody = document.getElementById('locationTableBody');
+                tbody.innerHTML = '';
+
+                if (pageData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--jc-text-muted)">暂无库位数据</td></tr>`;
+                } else {
+                    pageData.forEach((loc, idx) => {
+                        const isSelected = this.selectedIds.has(loc.id);
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><input type="checkbox" class="loc-row-check" data-id="${loc.id}"${isSelected ? ' checked' : ''} style="width:16px;height:16px;cursor:pointer"></td>
+                            <td>${start + idx + 1}</td>
+                            <td><span class="tag blue">${loc.warehouseName}</span></td>
+                            <td><strong style="font-family:monospace;letter-spacing:1px">${loc.locationCode}</strong></td>
+                            <td>${loc.manager}</td>
+                            <td style="color:var(--jc-text-light)">${loc.size}</td>
+                            <td><span class="tag orange">${loc.capacity}</span></td>
+                            <td><span class="tag green">${loc.remainingCapacity}</span></td>
+                            <td style="color:var(--jc-text-light);font-size:13px">${DateUtils.format(loc.createTime, 'YYYY-MM-DD')}</td>
+                            <td>
+                                <div class="table-actions">
+                                    <button class="btn btn-outline btn-sm" onclick="LOCModule.openEdit(${loc.id})"><i class="fas fa-edit"></i> 编辑</button>
+                                    <button class="btn btn-danger btn-sm" onclick="LOCModule.confirmDelete(${loc.id})"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+
+                        // 绑定行复选框事件
+                        const cb = tr.querySelector('.loc-row-check');
+                        cb.addEventListener('change', (e) => {
+                            if (e.target.checked) this.selectedIds.add(loc.id);
+                            else this.selectedIds.delete(loc.id);
+                            this.updateBatchBar();
+                        });
+                    });
+                }
+
+                document.getElementById('locPageInfo').textContent = `共 ${total} 条记录`;
+                this.renderPagination(total);
+            },
+
+            renderPagination(total) {
+                const totalPages = Math.ceil(total / this.pageSize);
+                const controls = document.getElementById('locPageControls');
+                controls.innerHTML = '';
+                if (totalPages <= 1) return;
+
+                const prev = document.createElement('button');
+                prev.className = 'pagination-btn';
+                prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                prev.disabled = this.currentPage === 1;
+                prev.onclick = () => { this.currentPage--; this.render(); };
+                controls.appendChild(prev);
+
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = `pagination-btn${i === this.currentPage ? ' active' : ''}`;
+                    btn.textContent = i;
+                    btn.onclick = () => { this.currentPage = i; this.render(); };
+                    controls.appendChild(btn);
+                }
+
+                const next = document.createElement('button');
+                next.className = 'pagination-btn';
+                next.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                next.disabled = this.currentPage === totalPages;
+                next.onclick = () => { this.currentPage++; this.render(); };
+                controls.appendChild(next);
+            },
+
+            openAdd() {
+                this.editingId = null;
+                this.showModal();
+            },
+
+            openEdit(id) {
+                this.editingId = id;
+                const loc = Locations.getById(id);
+                if (!loc) return;
+                this.showModal(loc);
+            },
+
+            showModal(data = null) {
+                const isEdit = !!data;
+                const warehouses = Warehouses.getAll();
+                const whOptions = warehouses.map(wh =>
+                    `<option value="${wh.name}"${isEdit && data.warehouseName === wh.name ? ' selected' : ''}>${wh.name}</option>`
+                ).join('');
+
+                const content = `
+                    <form id="locationForm" autocomplete="off">
+                        <div class="modal-form-row">
+                            <div class="form-group">
+                                <label class="form-label">仓库名称<span class="required-mark">*</span></label>
+                                <select class="form-control" name="locationWarehouse" data-label="仓库名称" id="locModalWarehouse">
+                                    <option value="">请选择仓库</option>
+                                    ${whOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">库位编号<span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" name="locationCode"
+                                    placeholder="如：A-01-01"
+                                    value="${isEdit ? data.locationCode : ''}"
+                                    data-label="库位编号">
+                            </div>
+                        </div>
+                        <div class="modal-form-row">
+                            <div class="form-group">
+                                <label class="form-label">负责人员<span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" name="locationManager"
+                                    placeholder="请输入负责人员姓名"
+                                    value="${isEdit ? data.manager : ''}"
+                                    data-label="负责人员">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">库位尺寸<span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" name="locationSize"
+                                    placeholder="如：2m x 1.5m x 1.8m"
+                                    value="${isEdit ? data.size : ''}"
+                                    data-label="库位尺寸">
+                            </div>
+                        </div>
+                        <div class="modal-form-row">
+                            <div class="form-group">
+                                <label class="form-label">库位容量<span class="required-mark">*</span></label>
+                                <input type="number" class="form-control" name="locationCapacity"
+                                    placeholder="请输入库位容量"
+                                    value="${isEdit ? data.capacity : ''}"
+                                    data-label="库位容量">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">剩余容量<span class="required-mark">*</span></label>
+                                <input type="number" class="form-control" name="locationRemaining"
+                                    placeholder="请输入剩余容量"
+                                    value="${isEdit ? data.remainingCapacity : ''}"
+                                    data-label="剩余容量">
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="padding:0;margin-top:var(--jc-spacing-xl);border:0">
+                            <button type="button" class="btn btn-secondary" onclick="Modal.close(this)">取消</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> ${isEdit ? '保存修改' : '新增库位'}
+                            </button>
+                        </div>
+                    </form>
+                `;
+
+                const modal = Modal.open(content, {
+                    title: isEdit ? '编辑库位' : '新增库位',
+                    size: ''
+                });
+
+                const form = modal.querySelector('#locationForm');
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleSubmit(form);
+                });
+            },
+
+            openBatchAdd() {
+                const warehouses = Warehouses.getAll();
+                if (warehouses.length === 0) {
+                    Toast.warning('请先创建仓库，再进行库位管理');
+                    return;
+                }
+                const whOptions = warehouses.map(wh => `<option value="${wh.name}">${wh.name}</option>`).join('');
+
+                const content = `
+                    <form id="batchLocationForm" autocomplete="off">
+                        <div class="form-group">
+                            <label class="form-label">仓库名称<span class="required-mark">*</span></label>
+                            <select class="form-control" name="locationWarehouse" data-label="仓库名称">
+                                <option value="">请选择仓库</option>
+                                ${whOptions}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">库位编号列表<span class="required-mark">*</span></label>
+                            <textarea class="form-control" name="locationCodes" rows="6"
+                                placeholder="每行输入一个库位编号，如：&#10;A-01-01&#10;A-01-02&#10;A-01-03"
+                                data-label="库位编号列表"></textarea>
+                            <div style="margin-top:6px;font-size:var(--jc-font-size-small);color:var(--jc-text-light)">
+                                <i class="fas fa-info-circle"></i> 每行一个编号，系统将自动过滤已存在的编号
+                            </div>
+                        </div>
+                        <div class="modal-form-row">
+                            <div class="form-group">
+                                <label class="form-label">负责人员<span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" name="locationManager"
+                                    placeholder="请输入负责人员姓名"
+                                    data-label="负责人员">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">库位尺寸<span class="required-mark">*</span></label>
+                                <input type="text" class="form-control" name="locationSize"
+                                    placeholder="如：2m x 1.5m x 1.8m"
+                                    data-label="库位尺寸">
+                            </div>
+                        </div>
+                        <div class="modal-form-row">
+                            <div class="form-group">
+                                <label class="form-label">库位容量<span class="required-mark">*</span></label>
+                                <input type="number" class="form-control" name="locationCapacity"
+                                    placeholder="请输入库位容量"
+                                    data-label="库位容量">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">剩余容量<span class="required-mark">*</span></label>
+                                <input type="number" class="form-control" name="locationRemaining"
+                                    placeholder="请输入剩余容量"
+                                    data-label="剩余容量">
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="padding:0;margin-top:var(--jc-spacing-xl);border:0">
+                            <button type="button" class="btn btn-secondary" onclick="Modal.close(this)">取消</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-layer-group"></i> 批量新增
+                            </button>
+                        </div>
+                    </form>
+                `;
+
+                const modal = Modal.open(content, { title: '批量新增库位', size: '' });
+                const form = modal.querySelector('#batchLocationForm');
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleBatchSubmit(form);
+                });
+            },
+
+            handleSubmit(form) {
+                const result = Validation.validate(form, ValidationSchemas.location);
+                if (!result.valid) return;
+
+                const warehouseName = form.querySelector('[name="locationWarehouse"]').value;
+                const locationCode = form.querySelector('[name="locationCode"]').value.trim();
+                const manager = form.querySelector('[name="locationManager"]').value.trim();
+                const size = form.querySelector('[name="locationSize"]').value.trim();
+                const capacity = form.querySelector('[name="locationCapacity"]').value;
+                const remainingCapacity = form.querySelector('[name="locationRemaining"]').value;
+
+                if (Locations.exists(locationCode, warehouseName, this.editingId)) {
+                    FormUtils.setFieldError(form.querySelector('[name="locationCode"]'), '该仓库下此库位编号已存在，请更换编号');
+                    return;
+                }
+
+                if (this.editingId) {
+                    Locations.update(this.editingId, { warehouseName, locationCode, manager, size, capacity, remainingCapacity });
+                    Toast.success(`库位「${locationCode}」已更新`);
+                } else {
+                    Locations.add({ warehouseName, locationCode, manager, size, capacity, remainingCapacity });
+                    Toast.success(`库位「${locationCode}」新增成功`);
+                }
+
+                Modal.close(form.querySelector('.btn-secondary'));
+                this.render();
+            },
+
+            handleBatchSubmit(form) {
+                const warehouseName = form.querySelector('[name="locationWarehouse"]').value.trim();
+                const codesRaw = form.querySelector('[name="locationCodes"]').value;
+                const manager = form.querySelector('[name="locationManager"]').value.trim();
+                const size = form.querySelector('[name="locationSize"]').value.trim();
+                const capacity = form.querySelector('[name="locationCapacity"]').value;
+                const remainingCapacity = form.querySelector('[name="locationRemaining"]').value;
+
+                // 基础校验
+                if (!warehouseName) {
+                    FormUtils.setFieldError(form.querySelector('[name="locationWarehouse"]'), '请选择仓库名称');
+                    return;
+                }
+                if (!codesRaw.trim()) {
+                    FormUtils.setFieldError(form.querySelector('[name="locationCodes"]'), '请至少输入一个库位编号');
+                    return;
+                }
+                if (!manager) {
+                    FormUtils.setFieldError(form.querySelector('[name="locationManager"]'), '负责人员不能为空');
+                    return;
+                }
+                if (!size) {
+                    FormUtils.setFieldError(form.querySelector('[name="locationSize"]'), '库位尺寸不能为空');
+                    return;
+                }
+                if (!capacity || parseFloat(capacity) <= 0) {
+                    FormUtils.setFieldError(form.querySelector('[name="locationCapacity"]'), '库位容量必须大于0');
+                    return;
+                }
+                if (!remainingCapacity || isNaN(parseFloat(remainingCapacity))) {
+                    FormUtils.setFieldError(form.querySelector('[name="locationRemaining"]'), '剩余容量不能为空');
+                    return;
+                }
+
+                const codes = codesRaw.split(/\n/).map(c => c.trim()).filter(c => c.length > 0);
+                if (codes.length === 0) {
+                    FormUtils.setFieldError(form.querySelector('[name="locationCodes"]'), '请至少输入一个有效的库位编号');
+                    return;
+                }
+
+                // 过滤已存在的编号
+                const newItems = [];
+                const skipped = [];
+                codes.forEach(code => {
+                    if (Locations.exists(code, warehouseName)) {
+                        skipped.push(code);
+                    } else {
+                        newItems.push({ warehouseName, locationCode: code, manager, size, capacity, remainingCapacity });
+                    }
+                });
+
+                if (newItems.length > 0) {
+                    Locations.batchAdd(newItems);
+                    let msg = `成功新增 ${newItems.length} 个库位`;
+                    if (skipped.length > 0) msg += `：${skipped.length} 个编号已存在被跳过`;
+                    Toast.success(msg);
+                } else {
+                    Toast.warning('所有输入的库位编号在该仓库下均已存在');
+                }
+
+                Modal.close(form.querySelector('.btn-secondary'));
+                this.render();
+            },
+
+            confirmDelete(id) {
+                const loc = Locations.getById(id);
+                if (!loc) return;
+                Modal.confirm(`确定要删除库位「${loc.locationCode}」？`, () => {
+                    Locations.delete(id);
+                    Toast.success(`库位「${loc.locationCode}」已删除`);
+                    this.selectedIds.delete(id);
+                    this.updateBatchBar();
+                    this.render();
+                });
+            }
+        };
+
+        // ====================Tab 切换====================
+        function initTabs() {
+            document.querySelectorAll('#configTabs .tab-item').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('#configTabs .tab-item').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    const tabName = tab.dataset.tab;
+                    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+
+                    if (tabName === 'location') {
+                        LOCModule.syncWarehouseFilter();
+                        LOCModule.render();
+                    }
+                });
+            });
+        }
+
+        // ====================侧边栏、退出"===================
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => { window.location.href = '../index.html'; }, 500);
+            });
+        });
+
+        // ====================按鈕绑定====================
+        document.getElementById('btnAddWarehouse').addEventListener('click', () => WHModule.openAdd());
+        document.getElementById('btnAddLocation').addEventListener('click', () => LOCModule.openAdd());
+
+        // ====================初始区"===================
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            initTabs();
+            WHModule.init();
+            LOCModule.init();
+        });
+    </script>
+</body>
+</html>

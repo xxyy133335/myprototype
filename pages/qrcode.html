@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二维码系统 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* Tab 样式 */
+        .qrcode-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--jc-border-line);
+            margin-bottom: var(--jc-spacing-xl);
+            background: var(--jc-card-white);
+            padding: 0 var(--jc-spacing-xl);
+            border-radius: var(--jc-radius-card) var(--jc-radius-card) 0 0;
+        }
+
+        .qrcode-tab {
+            padding: var(--jc-spacing-md) var(--jc-spacing-xl);
+            font-size: var(--jc-font-size-body);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all var(--jc-transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .qrcode-tab:hover {
+            color: var(--jc-accent-teal);
+        }
+
+        .qrcode-tab.active {
+            color: var(--jc-accent-teal);
+            border-bottom-color: var(--jc-accent-teal);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 单个生成区域 */
+        .single-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--jc-spacing-2xl);
+        }
+
+        @media (max-width: 992px) {
+            .single-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .preview-panel {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-2xl);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 400px;
+        }
+
+        .preview-title {
+            font-size: var(--jc-font-size-card-title);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+            margin-bottom: var(--jc-spacing-xl);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .preview-title i {
+            color: var(--jc-accent-teal);
+        }
+
+        .label-preview {
+            border: 1px dashed var(--jc-border-line);
+            border-radius: var(--jc-radius-card);
+            padding: var(--jc-spacing-xl);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--jc-spacing-md);
+            background: var(--jc-bg-gray);
+            min-width: 260px;
+        }
+
+        .label-preview .qr-wrap {
+            background: #fff;
+            padding: 8px;
+            border-radius: var(--jc-radius-control);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .label-preview .qr-info {
+            text-align: center;
+            font-size: 13px;
+            color: var(--jc-text-dark);
+            line-height: 1.6;
+        }
+
+        .label-preview .qr-info .info-row {
+            display: flex;
+            justify-content: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .label-preview .qr-info .info-label {
+            color: var(--jc-text-light);
+        }
+
+        .label-preview .qr-info .info-value {
+            font-weight: var(--jc-font-weight-semibold);
+        }
+
+        /* 批量生成区域 */
+        .batch-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--jc-spacing-lg);
+            flex-wrap: wrap;
+            gap: var(--jc-spacing-md);
+        }
+
+        .batch-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-md);
+        }
+
+        .batch-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-md);
+        }
+
+        .batch-search {
+            display: flex;
+            gap: var(--jc-spacing-sm);
+            max-width: 400px;
+        }
+
+        .batch-count {
+            color: var(--jc-text-light);
+            font-size: var(--jc-font-size-body);
+        }
+
+        .batch-count strong {
+            color: var(--jc-accent-teal);
+        }
+
+        /* 表格复选框 */
+        .table-check {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* 批量预览网格 */
+        .batch-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: var(--jc-spacing-xl);
+            margin-top: var(--jc-spacing-xl);
+        }
+
+        .batch-label-card {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--jc-spacing-md);
+            position: relative;
+        }
+
+        .batch-label-card .qr-wrap {
+            background: #fff;
+            padding: 6px;
+            border-radius: var(--jc-radius-control);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .batch-label-card .qr-info {
+            text-align: center;
+            font-size: 12px;
+            color: var(--jc-text-dark);
+            line-height: 1.5;
+        }
+
+        .batch-label-card .qr-info .info-value {
+            font-weight: var(--jc-font-weight-semibold);
+        }
+
+        .batch-label-card .remove-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--jc-danger-red-light);
+            color: var(--jc-danger-red);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .batch-label-card .remove-btn:hover {
+            background: var(--jc-danger-red);
+            color: #fff;
+        }
+
+        /* 打印模板区域 */
+        .template-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--jc-spacing-2xl);
+        }
+
+        @media (max-width: 992px) {
+            .template-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .template-form-panel {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-2xl);
+        }
+
+        .template-preview-panel {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-2xl);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .template-preview-panel .label-preview {
+            margin-top: var(--jc-spacing-xl);
+        }
+
+        .template-actions {
+            display: flex;
+            gap: var(--jc-spacing-md);
+            margin-top: var(--jc-spacing-xl);
+            padding-top: var(--jc-spacing-xl);
+            border-top: 1px solid var(--jc-border-line-light);
+        }
+
+        .field-toggle-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .field-toggle-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--jc-spacing-sm) 0;
+        }
+
+        /* 打印专用样式 */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printArea,
+            #printArea * {
+                visibility: visible;
+            }
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        #printArea {
+            display: none;
+        }
+
+        @media print {
+            #printArea {
+                display: block !important;
+            }
+        }
+
+        /* 打印区域内的标签样式 */
+        .print-sheet {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            padding: 0;
+        }
+
+        .print-label {
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            page-break-inside: avoid;
+        }
+
+        .print-label .print-qr {
+            margin-bottom: 6px;
+        }
+
+        .print-label .print-info {
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .print-label .print-info .print-row {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        /* 空状态"*/
+        .empty-state-small {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--jc-spacing-2xl);
+            color: var(--jc-text-muted);
+            gap: var(--jc-spacing-md);
+        }
+
+        .empty-state-small i {
+            font-size: 32px;
+        }
+
+        /* 表格容器 */
+        .table-scroll-container {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+        }
+
+        .table-scroll-container .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table-scroll-container .table thead th {
+            background: var(--jc-bg-gray);
+            box-shadow: 0 1px 0 var(--jc-border-line);
+        }
+
+        .table-scroll-container .table {
+            font-size: 13px;
+        }
+
+        .table-scroll-container .table th,
+        .table-scroll-container .table td {
+            padding: 10px 12px;
+            white-space: nowrap;
+        }
+
+        /* 预览工具栏"*/
+        .preview-toolbar {
+            display: flex;
+            gap: var(--jc-spacing-md);
+            margin-top: var(--jc-spacing-xl);
+        }
+
+        /* 模态框内预规"*/
+        .modal-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: var(--jc-spacing-lg);
+            max-height: 500px;
+            overflow-y: auto;
+            padding: var(--jc-spacing-md);
+        }
+
+        .modal-preview-grid .batch-label-card {
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="../802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="../dashboard.html" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inbound.html" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="outbound.html" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="transfer.html" class="nav-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="query.html" class="nav-link">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inventory.html" class="nav-link planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="express.html" class="nav-link">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="scrap.html" class="nav-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="qrcode.html" class="nav-link active">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="config.html" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="../dashboard.html">首页</a>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current">二维码系统</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <!-- 页面标题 -->
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <div>
+                                <h1 class="page-title">二维码系统</h1>
+                                <p class="page-description">物料二维码生成、预览与打印管理</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 切换 -->
+                    <div class="qrcode-tabs">
+                        <div class="qrcode-tab active" data-tab="single">
+                            <i class="fas fa-qrcode"></i>
+                            <span>单个生成</span>
+                        </div>
+                        <div class="qrcode-tab" data-tab="batch">
+                            <i class="fas fa-layer-group"></i>
+                            <span>批量生成</span>
+                        </div>
+                        <div class="qrcode-tab" data-tab="template">
+                            <i class="fas fa-print"></i>
+                            <span>打印模板</span>
+                        </div>
+                    </div>
+
+                    <!-- 单个生成 -->
+                    <div class="tab-content active" id="singleTab">
+                        <div class="single-section">
+                            <!-- 左侧表单 -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        <i class="fas fa-edit"></i>
+                                        物料信息
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label class="form-label">物料名称 <span class="required-mark">*</span></label>
+                                        <input type="text" class="form-control" id="singleName" placeholder="请输入物料名称">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">物料编号 <span class="required-mark">*</span></label>
+                                        <input type="text" class="form-control" id="singleCode" placeholder="请输入物料编号">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">所属人 <span class="required-mark">*</span></label>
+                                        <input type="text" class="form-control" id="singleOwner" placeholder="请输入所属人">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">所属部门</label>
+                                        <input type="text" class="form-control" id="singleDept" placeholder="请输入所属部门（选填）">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">仓库</label>
+                                        <input type="text" class="form-control" id="singleWarehouse" placeholder="请输入仓库（选填）">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">货位</label>
+                                        <input type="text" class="form-control" id="singleLocation" placeholder="请输入货位（选填）">
+                                    </div>
+                                    <div class="preview-toolbar">
+                                        <button class="btn btn-primary" onclick="generateSingleQR()">
+                                            <i class="fas fa-sync-alt"></i> 生成预览
+                                        </button>
+                                        <button class="btn btn-success" onclick="printSingleQR()">
+                                            <i class="fas fa-print"></i> 打印标签
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="clearSingleForm()">
+                                            <i class="fas fa-undo"></i> 重置
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 右侧预览 -->
+                            <div class="preview-panel">
+                                <div class="preview-title">
+                                    <i class="fas fa-eye"></i>
+                                    标签预览
+                                </div>
+                                <div class="label-preview" id="singlePreview">
+                                    <div class="empty-state-small">
+                                        <i class="fas fa-qrcode"></i>
+                                        <span>请填写物料信息后点击"生成预览"</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 批量生成 -->
+                    <div class="tab-content" id="batchTab">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-boxes"></i>
+                                    库存台账
+                                </div>
+                                <div class="card-tools">
+                                    <span class="batch-count">已选择 <strong id="batchSelectedCount">0</strong> 板</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- 工具栏 -->
+                                <div class="batch-toolbar">
+                                    <div class="batch-toolbar-left">
+                                        <div class="batch-search">
+                                            <input type="text" class="form-control" id="batchSearchInput" placeholder="搜索物料名称/编号/所属人">
+                                            <button class="btn btn-primary" onclick="searchBatchInventory()">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="batch-toolbar-right">
+                                        <button class="btn btn-outline" onclick="selectAllBatch()">
+                                            <i class="fas fa-check-square"></i> 全选 
+                                        </button>
+                                        <button class="btn btn-outline" onclick="clearBatchSelection()">
+                                            <i class="fas fa-square"></i> 清空
+                                        </button>
+                                        <button class="btn btn-primary" onclick="generateBatchPreview()">
+                                            <i class="fas fa-sync-alt"></i> 生成预览
+                                        </button>
+                                        <button class="btn btn-success" onclick="printBatchQR()">
+                                            <i class="fas fa-print"></i> 打印选中
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 表格 -->
+                                <div class="table-scroll-container">
+                                    <table class="table" id="batchTable">
+                                        <thead>
+                                            <tr>
+                                                <th><input type="checkbox" class="table-check" id="batchCheckAll" onchange="toggleBatchCheckAll()"></th>
+                                                <th>物料名称</th>
+                                                <th>物料编号</th>
+                                                <th>所属人</th>
+                                                <th>所属部门</th>
+                                                <th>物料类别</th>
+                                                <th>仓库</th>
+                                                <th>货位</th>
+                                                <th>剩余库存</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 批量预览区域 -->
+                        <div class="card" style="margin-top: var(--jc-spacing-xl);">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-th"></i>
+                                    批量预览
+                                </div>
+                                <div class="card-tools">
+                                    <button class="btn btn-danger btn-sm" onclick="clearBatchPreview()">
+                                        <i class="fas fa-trash-alt"></i> 清空预览
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="batchPreviewArea">
+                                    <div class="empty-state-small">
+                                        <i class="fas fa-layer-group"></i>
+                                        <span>从上方库存台账中选择物料，点出"生成预览"查看批量标签</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 打印模板 -->
+                    <div class="tab-content" id="templateTab">
+                        <div class="template-section">
+                            <!-- 左侧模板设置 -->
+                            <div class="template-form-panel">
+                                <div class="card-title" style="margin-bottom: var(--jc-spacing-xl);">
+                                    <i class="fas fa-cog"></i>
+                                    模板设置
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">标签宽度 (mm)</label>
+                                        <input type="number" class="form-control" id="tplWidth" value="60" min="20" max="150">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">标签高度 (mm)</label>
+                                        <input type="number" class="form-control" id="tplHeight" value="90" min="30" max="200">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">二维码尺导"(px)</label>
+                                        <input type="number" class="form-control" id="tplQrSize" value="120" min="60" max="300">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">字体大小 (px)</label>
+                                        <input type="number" class="form-control" id="tplFontSize" value="12" min="8" max="24">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">显示字段</label>
+                                    <div class="field-toggle-list">
+                                        <div class="field-toggle-item">
+                                            <span>物料名称</span>
+                                            <input type="checkbox" class="form-check-input" id="showName" checked>
+                                        </div>
+                                        <div class="field-toggle-item">
+                                            <span>物料编号</span>
+                                            <input type="checkbox" class="form-check-input" id="showCode" checked>
+                                        </div>
+                                        <div class="field-toggle-item">
+                                            <span>所属人</span>
+                                            <input type="checkbox" class="form-check-input" id="showOwner" checked>
+                                        </div>
+                                        <div class="field-toggle-item">
+                                            <span>所属部门</span>
+                                            <input type="checkbox" class="form-check-input" id="showDept">
+                                        </div>
+                                        <div class="field-toggle-item">
+                                            <span>仓库</span>
+                                            <input type="checkbox" class="form-check-input" id="showWarehouse">
+                                        </div>
+                                        <div class="field-toggle-item">
+                                            <span>货位</span>
+                                            <input type="checkbox" class="form-check-input" id="showLocation">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="template-actions">
+                                    <button class="btn btn-primary" onclick="applyTemplate()">
+                                        <i class="fas fa-check"></i> 应用设置
+                                    </button>
+                                    <button class="btn btn-outline" onclick="exportTemplate()">
+                                        <i class="fas fa-download"></i> 导出模板
+                                    </button>
+                                    <div class="form-file" style="position: relative;">
+                                        <input type="file" class="form-file-input" id="templateImportFile" accept=".json" onchange="importTemplate(this)">
+                                        <label class="btn btn-outline" style="margin:0;cursor:pointer;">
+                                            <i class="fas fa-upload"></i> 导入模板
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-secondary" onclick="resetTemplate()">
+                                        <i class="fas fa-undo"></i> 恢复默认
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 右侧预览 -->
+                            <div class="template-preview-panel">
+                                <div class="preview-title">
+                                    <i class="fas fa-eye"></i>
+                                    模板预览
+                                </div>
+                                <div class="label-preview" id="templatePreview">
+                                    <div class="empty-state-small">
+                                        <i class="fas fa-print"></i>
+                                        <span>点击"应用设置"预览模板效果</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 隐藏打印区域 -->
+    <div id="printArea">
+        <div class="print-sheet" id="printSheet"></div>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/data.js"></script>
+    <script>
+        // ==================== 全局状态"====================
+        let currentTemplate = {
+            width: 60,
+            height: 90,
+            qrSize: 120,
+            fontSize: 12,
+            showName: true,
+            showCode: true,
+            showOwner: true,
+            showDept: false,
+            showWarehouse: false,
+            showLocation: false
+        };
+
+        let batchSelectedItems = [];
+        let batchPreviewItems = [];
+
+        // ==================== 初始区"====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态 
+            if (!Users.isLoggedIn()) {
+                window.location.href = '../index.html';
+            }
+
+            loadUserInfo();
+            loadTemplateFromStorage();
+            initTabs();
+            loadBatchInventory();
+
+            // 单个生成实时监听
+            ['singleName', 'singleCode', 'singleOwner', 'singleDept', 'singleWarehouse', 'singleLocation'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', debounce(generateSingleQR, 300));
+            });
+
+            // 批量搜索监听
+            document.getElementById('batchSearchInput')?.addEventListener('input', debounce(searchBatchInventory, 300));
+
+            // 模板输入监听
+            ['tplWidth', 'tplHeight', 'tplQrSize', 'tplFontSize'].forEach(id => {
+                document.getElementById(id)?.addEventListener('input', debounce(applyTemplate, 300));
+            });
+            ['showName', 'showCode', 'showOwner', 'showDept', 'showWarehouse', 'showLocation'].forEach(id => {
+                document.getElementById(id)?.addEventListener('change', applyTemplate);
+            });
+        });
+
+        // ==================== 用户信息 ====================
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                const roleMap = { admin: '系统管理员', keeper: '仓管员', engineer: '工程师' };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+            }
+        }
+
+        // ==================== Tab 切换 ====================
+        function initTabs() {
+            document.querySelectorAll('.qrcode-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetTab = this.dataset.tab;
+                    document.querySelectorAll('.qrcode-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(targetTab + 'Tab').classList.add('active');
+
+                    if (targetTab === 'batch') {
+                        loadBatchInventory();
+                    } else if (targetTab === 'template') {
+                        applyTemplate();
+                    }
+                });
+            });
+        }
+
+        // ==================== 二维码生成核必"====================
+        function createQRCode(containerId, text, size) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            try {
+                new QRCode(container, {
+                    text: text,
+                    width: size,
+                    height: size,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch (e) {
+                container.innerHTML = '<div style="padding:20px;color:#999;font-size:12px;">二维码生成失质</div>';
+            }
+        }
+
+        function getQRText(item) {
+            const parts = [];
+            if (item.materialName) parts.push('物料名称:' + item.materialName);
+            if (item.materialCode) parts.push('物料编号:' + item.materialCode);
+            if (item.owner) parts.push('所属人:' + item.owner);
+            if (item.department) parts.push('所属部门"' + item.department);
+            if (item.warehouse) parts.push('仓库:' + item.warehouse);
+            if (item.location) parts.push('货位:' + item.location);
+            return parts.join(' | ');
+        }
+
+        function buildLabelHTML(item, options = {}) {
+            const tpl = { ...currentTemplate, ...options };
+            const qrId = 'qr-' + Math.random().toString(36).substr(2, 9);
+            const qrSize = tpl.qrSize;
+
+            let infoHtml = '';
+            const fields = [];
+            if (tpl.showName && item.materialName) fields.push({ label: '物料', value: item.materialName });
+            if (tpl.showCode && item.materialCode) fields.push({ label: '编号', value: item.materialCode });
+            if (tpl.showOwner && item.owner) fields.push({ label: '所属人', value: item.owner });
+            if (tpl.showDept && item.department) fields.push({ label: '部门', value: item.department });
+            if (tpl.showWarehouse && item.warehouse) fields.push({ label: '仓库', value: item.warehouse });
+            if (tpl.showLocation && item.location) fields.push({ label: '货位', value: item.location });
+
+            fields.forEach(f => {
+                infoHtml += `<div class="info-row"><span class="info-label">${f.label}:</span><span class="info-value">${f.value}</span></div>`;
+            });
+
+            return `
+                <div class="qr-wrap" id="${qrId}"></div>
+                <div class="qr-info" style="font-size:${tpl.fontSize}px;">${infoHtml}</div>
+            `;
+        }
+
+        // ==================== 单个生成 ====================
+        function generateSingleQR() {
+            const name = document.getElementById('singleName').value.trim();
+            const code = document.getElementById('singleCode').value.trim();
+            const owner = document.getElementById('singleOwner').value.trim();
+            const dept = document.getElementById('singleDept').value.trim();
+            const warehouse = document.getElementById('singleWarehouse').value.trim();
+            const location = document.getElementById('singleLocation').value.trim();
+
+            if (!name && !code && !owner) {
+                document.getElementById('singlePreview').innerHTML = `
+                    <div class="empty-state-small">
+                        <i class="fas fa-qrcode"></i>
+                        <span>请填写物料信息后点击"生成预览"</span>
+                    </div>`;
+                return;
+            }
+
+            const item = { materialName: name, materialCode: code, owner, department: dept, warehouse, location };
+            const preview = document.getElementById('singlePreview');
+            preview.innerHTML = buildLabelHTML(item);
+
+            // 延迟生成二维码图片（等DOM渲染完）
+            setTimeout(() => {
+                const qrWrap = preview.querySelector('.qr-wrap');
+                if (qrWrap) {
+                    qrWrap.innerHTML = '';
+                    new QRCode(qrWrap, {
+                        text: getQRText(item),
+                        width: currentTemplate.qrSize,
+                        height: currentTemplate.qrSize,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                }
+            }, 50);
+        }
+
+        function printSingleQR() {
+            const name = document.getElementById('singleName').value.trim();
+            const code = document.getElementById('singleCode').value.trim();
+            const owner = document.getElementById('singleOwner').value.trim();
+            if (!name || !code || !owner) {
+                Toast.error('请填写完整的物料信息（物料名称、物料编号、所属人）');
+                return;
+            }
+
+            const item = {
+                materialName: name,
+                materialCode: code,
+                owner: owner,
+                department: document.getElementById('singleDept').value.trim(),
+                warehouse: document.getElementById('singleWarehouse').value.trim(),
+                location: document.getElementById('singleLocation').value.trim()
+            };
+
+            printLabels([item]);
+        }
+
+        function clearSingleForm() {
+            document.getElementById('singleName').value = '';
+            document.getElementById('singleCode').value = '';
+            document.getElementById('singleOwner').value = '';
+            document.getElementById('singleDept').value = '';
+            document.getElementById('singleWarehouse').value = '';
+            document.getElementById('singleLocation').value = '';
+            document.getElementById('singlePreview').innerHTML = `
+                <div class="empty-state-small">
+                    <i class="fas fa-qrcode"></i>
+                    <span>请填写物料信息后点击"生成预览"</span>
+                </div>`;
+        }
+
+        // ==================== 批量生成 ====================
+        let batchInventoryData = [];
+
+        function loadBatchInventory() {
+            batchInventoryData = Inventory.getAll().filter(item => item.remainingStock > 0);
+            renderBatchTable(batchInventoryData);
+        }
+
+        function renderBatchTable(data) {
+            const tbody = document.querySelector('#batchTable tbody');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center" style="padding: 40px;">暂无库存数据</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map((item, idx) => {
+                const isChecked = batchSelectedItems.some(s => s.id === item.id);
+                return `
+                    <tr>
+                        <td><input type="checkbox" class="table-check" data-id="${item.id}" ${isChecked ? 'checked' : ''} onchange="toggleBatchItem(${item.id}, this.checked)"></td>
+                        <td>${item.materialName}</td>
+                        <td>${item.materialCode || '-'}</td>
+                        <td>${item.owner}</td>
+                        <td>${item.department}</td>
+                        <td><span class="tag blue">${item.materialCategory}</span></td>
+                        <td>${item.warehouse}</td>
+                        <td>${item.location}</td>
+                        <td>${item.remainingStock}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            updateBatchSelectCount();
+        }
+
+        function searchBatchInventory() {
+            const keyword = document.getElementById('batchSearchInput').value.toLowerCase().trim();
+            if (!keyword) {
+                renderBatchTable(batchInventoryData);
+                return;
+            }
+            const filtered = batchInventoryData.filter(item =>
+                item.materialName.toLowerCase().includes(keyword) ||
+                (item.materialCode && item.materialCode.toLowerCase().includes(keyword)) ||
+                item.owner.toLowerCase().includes(keyword)
+            );
+            renderBatchTable(filtered);
+        }
+
+        function toggleBatchItem(id, checked) {
+            if (checked) {
+                const item = batchInventoryData.find(i => i.id === id);
+                if (item && !batchSelectedItems.some(s => s.id === id)) {
+                    batchSelectedItems.push(item);
+                }
+            } else {
+                batchSelectedItems = batchSelectedItems.filter(s => s.id !== id);
+            }
+            updateBatchSelectCount();
+        }
+
+        function toggleBatchCheckAll() {
+            const checked = document.getElementById('batchCheckAll').checked;
+            const visibleRows = document.querySelectorAll('#batchTable tbody tr');
+            visibleRows.forEach(row => {
+                const cb = row.querySelector('.table-check');
+                if (cb) {
+                    cb.checked = checked;
+                    const id = parseInt(cb.dataset.id);
+                    toggleBatchItem(id, checked);
+                }
+            });
+        }
+
+        function selectAllBatch() {
+            document.getElementById('batchCheckAll').checked = true;
+            batchInventoryData.forEach(item => {
+                if (!batchSelectedItems.some(s => s.id === item.id)) {
+                    batchSelectedItems.push(item);
+                }
+            });
+            renderBatchTable(batchInventoryData);
+            updateBatchSelectCount();
+        }
+
+        function clearBatchSelection() {
+            document.getElementById('batchCheckAll').checked = false;
+            batchSelectedItems = [];
+            renderBatchTable(batchInventoryData);
+            updateBatchSelectCount();
+        }
+
+        function updateBatchSelectCount() {
+            document.getElementById('batchSelectedCount').textContent = batchSelectedItems.length;
+        }
+
+        function generateBatchPreview() {
+            if (batchSelectedItems.length === 0) {
+                Toast.warning('请先从库存台账中勾选需要生成二维码的物料');
+                return;
+            }
+
+            batchPreviewItems = [...batchSelectedItems];
+            renderBatchPreview();
+            Toast.success(`已生或 ${batchPreviewItems.length} 个标签预览`);
+        }
+
+        function renderBatchPreview() {
+            const area = document.getElementById('batchPreviewArea');
+            if (batchPreviewItems.length === 0) {
+                area.innerHTML = `
+                    <div class="empty-state-small">
+                        <i class="fas fa-layer-group"></i>
+                        <span>从上方库存台账中选择物料，点出"生成预览"查看批量标签</span>
+                    </div>`;
+                return;
+            }
+
+            area.innerHTML = '<div class="batch-preview-grid" id="batchPreviewGrid"></div>';
+            const grid = document.getElementById('batchPreviewGrid');
+
+            batchPreviewItems.forEach((item, idx) => {
+                const card = document.createElement('div');
+                card.className = 'batch-label-card';
+                const qrId = 'batch-qr-' + idx;
+                let infoHtml = '';
+                if (currentTemplate.showName && item.materialName) infoHtml += `<div><span class="info-value">${item.materialName}</span></div>`;
+                if (currentTemplate.showCode && item.materialCode) infoHtml += `<div>编号: ${item.materialCode}</div>`;
+                if (currentTemplate.showOwner && item.owner) infoHtml += `<div>所属人: ${item.owner}</div>`;
+                if (currentTemplate.showDept && item.department) infoHtml += `<div>部门: ${item.department}</div>`;
+                if (currentTemplate.showWarehouse && item.warehouse) infoHtml += `<div>仓库: ${item.warehouse}</div>`;
+                if (currentTemplate.showLocation && item.location) infoHtml += `<div>货位: ${item.location}</div>`;
+
+                card.innerHTML = `
+                    <div class="qr-wrap" id="${qrId}"></div>
+                    <div class="qr-info" style="font-size:${Math.max(10, currentTemplate.fontSize - 1)}px;">${infoHtml}</div>
+                    <button class="remove-btn" onclick="removeBatchPreviewItem(${idx})" title="移除"><i class="fas fa-times"></i></button>
+                `;
+                grid.appendChild(card);
+
+                setTimeout(() => {
+                    const wrap = document.getElementById(qrId);
+                    if (wrap) {
+                        new QRCode(wrap, {
+                            text: getQRText(item),
+                            width: Math.min(currentTemplate.qrSize, 100),
+                            height: Math.min(currentTemplate.qrSize, 100),
+                            colorDark: '#000000',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    }
+                }, 50);
+            });
+        }
+
+        function removeBatchPreviewItem(index) {
+            batchPreviewItems.splice(index, 1);
+            renderBatchPreview();
+        }
+
+        function clearBatchPreview() {
+            batchPreviewItems = [];
+            renderBatchPreview();
+        }
+
+        function printBatchQR() {
+            if (batchPreviewItems.length === 0) {
+                if (batchSelectedItems.length === 0) {
+                    Toast.warning('请先选择物料并生成预规');
+                    return;
+                }
+                batchPreviewItems = [...batchSelectedItems];
+            }
+            printLabels(batchPreviewItems);
+        }
+
+        // ==================== 打印核心 ====================
+        function printLabels(items) {
+            if (!items || items.length === 0) {
+                Toast.warning('没有可打印的标签');
+                return;
+            }
+
+            const printSheet = document.getElementById('printSheet');
+            printSheet.innerHTML = '';
+
+            // 将"mm 转为 px（近会"96 DPI） 
+            const pxPerMm = 3.78;
+            const labelW = Math.round(currentTemplate.width * pxPerMm);
+            const labelH = Math.round(currentTemplate.height * pxPerMm);
+            const qrSize = currentTemplate.qrSize;
+            const fontSize = currentTemplate.fontSize;
+
+            items.forEach((item, idx) => {
+                const label = document.createElement('div');
+                label.className = 'print-label';
+                label.style.width = labelW + 'px';
+                label.style.height = labelH + 'px';
+
+                const qrDiv = document.createElement('div');
+                qrDiv.className = 'print-qr';
+                const qrId = 'print-qr-' + idx;
+                qrDiv.id = qrId;
+
+                let infoHtml = '';
+                if (currentTemplate.showName && item.materialName) infoHtml += `<div class="print-row">物料: ${escapeHtml(item.materialName)}</div>`;
+                if (currentTemplate.showCode && item.materialCode) infoHtml += `<div class="print-row">编号: ${escapeHtml(item.materialCode)}</div>`;
+                if (currentTemplate.showOwner && item.owner) infoHtml += `<div class="print-row">所属人: ${escapeHtml(item.owner)}</div>`;
+                if (currentTemplate.showDept && item.department) infoHtml += `<div class="print-row">部门: ${escapeHtml(item.department)}</div>`;
+                if (currentTemplate.showWarehouse && item.warehouse) infoHtml += `<div class="print-row">仓库: ${escapeHtml(item.warehouse)}</div>`;
+                if (currentTemplate.showLocation && item.location) infoHtml += `<div class="print-row">货位: ${escapeHtml(item.location)}</div>`;
+
+                label.innerHTML = `
+                    <div class="print-qr" id="${qrId}"></div>
+                    <div class="print-info" style="font-size:${fontSize}px;">${infoHtml}</div>
+                `;
+                printSheet.appendChild(label);
+
+                setTimeout(() => {
+                    const wrap = document.getElementById(qrId);
+                    if (wrap) {
+                        new QRCode(wrap, {
+                            text: getQRText(item),
+                            width: qrSize,
+                            height: qrSize,
+                            colorDark: '#000000',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    }
+                }, 10);
+            });
+
+            setTimeout(() => {
+                window.print();
+            }, items.length * 80 + 200);
+
+            Toast.info(`正在准备打印 ${items.length} 个标等...`, '打印中', 2000);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==================== 打印模板 ====================
+        function applyTemplate() {
+            currentTemplate = {
+                width: parseInt(document.getElementById('tplWidth').value) || 60,
+                height: parseInt(document.getElementById('tplHeight').value) || 90,
+                qrSize: parseInt(document.getElementById('tplQrSize').value) || 120,
+                fontSize: parseInt(document.getElementById('tplFontSize').value) || 12,
+                showName: document.getElementById('showName').checked,
+                showCode: document.getElementById('showCode').checked,
+                showOwner: document.getElementById('showOwner').checked,
+                showDept: document.getElementById('showDept').checked,
+                showWarehouse: document.getElementById('showWarehouse').checked,
+                showLocation: document.getElementById('showLocation').checked
+            };
+
+            saveTemplateToStorage();
+
+            // 更新预览
+            const demoItem = {
+                materialName: '示例物料-室外机',
+                materialCode: 'OUT-001',
+                owner: '张三',
+                department: '仓储部',
+                warehouse: 'A',
+                location: 'A-0-0-0-0'
+            };
+
+            const preview = document.getElementById('templatePreview');
+            preview.innerHTML = buildLabelHTML(demoItem);
+
+            setTimeout(() => {
+                const qrWrap = preview.querySelector('.qr-wrap');
+                if (qrWrap) {
+                    qrWrap.innerHTML = '';
+                    new QRCode(qrWrap, {
+                        text: getQRText(demoItem),
+                        width: currentTemplate.qrSize,
+                        height: currentTemplate.qrSize,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                }
+            }, 50);
+        }
+
+        function exportTemplate() {
+            const dataStr = JSON.stringify(currentTemplate, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '二维码打印模板_' + DateUtils.now('YYYYMMDD_HHmmss') + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            Toast.success('打印模板导出成功');
+        }
+
+        function importTemplate(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.width !== undefined) currentTemplate.width = parseInt(data.width) || 60;
+                    if (data.height !== undefined) currentTemplate.height = parseInt(data.height) || 90;
+                    if (data.qrSize !== undefined) currentTemplate.qrSize = parseInt(data.qrSize) || 120;
+                    if (data.fontSize !== undefined) currentTemplate.fontSize = parseInt(data.fontSize) || 12;
+                    if (data.showName !== undefined) currentTemplate.showName = !!data.showName;
+                    if (data.showCode !== undefined) currentTemplate.showCode = !!data.showCode;
+                    if (data.showOwner !== undefined) currentTemplate.showOwner = !!data.showOwner;
+                    if (data.showDept !== undefined) currentTemplate.showDept = !!data.showDept;
+                    if (data.showWarehouse !== undefined) currentTemplate.showWarehouse = !!data.showWarehouse;
+                    if (data.showLocation !== undefined) currentTemplate.showLocation = !!data.showLocation;
+
+                    // 回填表单
+                    document.getElementById('tplWidth').value = currentTemplate.width;
+                    document.getElementById('tplHeight').value = currentTemplate.height;
+                    document.getElementById('tplQrSize').value = currentTemplate.qrSize;
+                    document.getElementById('tplFontSize').value = currentTemplate.fontSize;
+                    document.getElementById('showName').checked = currentTemplate.showName;
+                    document.getElementById('showCode').checked = currentTemplate.showCode;
+                    document.getElementById('showOwner').checked = currentTemplate.showOwner;
+                    document.getElementById('showDept').checked = currentTemplate.showDept;
+                    document.getElementById('showWarehouse').checked = currentTemplate.showWarehouse;
+                    document.getElementById('showLocation').checked = currentTemplate.showLocation;
+
+                    applyTemplate();
+                    Toast.success('打印模板导入成功');
+                } catch (err) {
+                    Toast.error('模板文件格式错误，请检查"JSON 文件');
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+
+        function resetTemplate() {
+            currentTemplate = {
+                width: 60,
+                height: 90,
+                qrSize: 120,
+                fontSize: 12,
+                showName: true,
+                showCode: true,
+                showOwner: true,
+                showDept: false,
+                showWarehouse: false,
+                showLocation: false
+            };
+            document.getElementById('tplWidth').value = currentTemplate.width;
+            document.getElementById('tplHeight').value = currentTemplate.height;
+            document.getElementById('tplQrSize').value = currentTemplate.qrSize;
+            document.getElementById('tplFontSize').value = currentTemplate.fontSize;
+            document.getElementById('showName').checked = currentTemplate.showName;
+            document.getElementById('showCode').checked = currentTemplate.showCode;
+            document.getElementById('showOwner').checked = currentTemplate.showOwner;
+            document.getElementById('showDept').checked = currentTemplate.showDept;
+            document.getElementById('showWarehouse').checked = currentTemplate.showWarehouse;
+            document.getElementById('showLocation').checked = currentTemplate.showLocation;
+            applyTemplate();
+            Toast.success('已恢复默认模板设置');
+        }
+
+        function saveTemplateToStorage() {
+            Storage.set('qrcode_template', currentTemplate);
+        }
+
+        function loadTemplateFromStorage() {
+            const saved = Storage.get('qrcode_template');
+            if (saved) {
+                currentTemplate = { ...currentTemplate, ...saved };
+                document.getElementById('tplWidth').value = currentTemplate.width;
+                document.getElementById('tplHeight').value = currentTemplate.height;
+                document.getElementById('tplQrSize').value = currentTemplate.qrSize;
+                document.getElementById('tplFontSize').value = currentTemplate.fontSize;
+                document.getElementById('showName').checked = currentTemplate.showName;
+                document.getElementById('showCode').checked = currentTemplate.showCode;
+                document.getElementById('showOwner').checked = currentTemplate.showOwner;
+                document.getElementById('showDept').checked = currentTemplate.showDept;
+                document.getElementById('showWarehouse').checked = currentTemplate.showWarehouse;
+                document.getElementById('showLocation').checked = currentTemplate.showLocation;
+            }
+        }
+
+        // ==================== 公共事件 ====================
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>

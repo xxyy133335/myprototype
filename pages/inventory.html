@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盘点 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .planned-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            text-align: center;
+            padding: var(--jc-spacing-3xl);
+        }
+
+        .planned-icon {
+            width: 120px;
+            height: 120px;
+            background: var(--jc-bg-gray);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--jc-spacing-xl);
+            font-size: 48px;
+            color: var(--jc-text-muted);
+        }
+
+        .planned-title {
+            font-size: 28px;
+            font-weight: var(--jc-font-weight-bold);
+            color: var(--jc-text-dark);
+            margin-bottom: var(--jc-spacing-md);
+        }
+
+        .planned-desc {
+            font-size: var(--jc-font-size-body);
+            color: var(--jc-text-light);
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .planned-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: var(--jc-tag-purple-bg);
+            color: var(--jc-tag-purple-text);
+            border-radius: var(--jc-radius-tag);
+            font-size: var(--jc-font-size-small);
+            font-weight: var(--jc-font-weight-semibold);
+            margin-top: var(--jc-spacing-lg);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="../802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="../dashboard.html" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inbound.html" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="outbound.html" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="transfer.html" class="nav-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="query.html" class="nav-link">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inventory.html" class="nav-link active planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="express.html" class="nav-link">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="scrap.html" class="nav-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="qrcode.html" class="nav-link">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="config.html" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 class="page-title">盘点</h1>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <div class="planned-page">
+                        <div class="planned-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <h2 class="planned-title">盘点功能</h2>
+                        <p class="planned-desc">
+                            该功能正在规划开发中，将提供库存盘点、差异分析、盘点报告生成等功能。 
+                            敬请期待后续版本更新。 
+                        </p>
+                        <span class="planned-badge">
+                            <i class="fas fa-clock"></i> 规划中 
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/data.js"></script>
+    <script>
+        // 检查登录状态 
+        if (!Users.isLoggedIn()) {
+            window.location.href = '../index.html';
+        }
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                
+                const roleMap = {
+                    admin: '系统管理员',
+                    keeper: '仓管员',
+                    engineer: '工程师'
+                };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+            }
+        }
+
+        // 侧边栏折叠 
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // 退出登录 
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 500);
+            });
+        });
+
+        // 初始区 
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+        });
+    </script>
+</body>
+</html>

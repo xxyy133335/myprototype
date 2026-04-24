@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作台 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 工作台专用样式 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--jc-spacing-xl);
+            margin-bottom: var(--jc-spacing-xl);
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dashboard-card {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-2xl);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-lg);
+            transition: transform var(--jc-transition-fast), box-shadow var(--jc-transition-fast);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .dashboard-card-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--jc-radius-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .dashboard-card-icon.blue {
+            background: var(--jc-accent-teal-light);
+            color: var(--jc-accent-teal);
+        }
+
+        .dashboard-card-icon.orange {
+            background: var(--jc-warning-orange-light);
+            color: var(--jc-warning-orange);
+        }
+
+        .dashboard-card-icon.green {
+            background: var(--jc-success-green-light);
+            color: var(--jc-success-green);
+        }
+
+        .dashboard-card-icon.purple {
+            background: var(--jc-tag-purple-bg);
+            color: var(--jc-tag-purple-text);
+        }
+
+        .dashboard-card-info {
+            flex: 1;
+        }
+
+        .dashboard-card-label {
+            font-size: var(--jc-font-size-body);
+            color: var(--jc-text-light);
+            margin-bottom: 4px;
+        }
+
+        .dashboard-card-value {
+            font-size: 32px;
+            font-weight: var(--jc-font-weight-bold);
+            color: var(--jc-text-dark);
+            line-height: 1.2;
+        }
+
+        .dashboard-card-trend {
+            font-size: var(--jc-font-size-small);
+            margin-top: 4px;
+        }
+
+        .dashboard-card-trend.up {
+            color: var(--jc-success-green);
+        }
+
+        .dashboard-card-trend.down {
+            color: var(--jc-danger-red);
+        }
+
+        /* 快捷入口 */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: var(--jc-spacing-lg);
+            margin-bottom: var(--jc-spacing-xl);
+        }
+
+        @media (max-width: 1200px) {
+            .quick-actions {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .quick-action-item {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-xl);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--jc-transition-fast);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .quick-action-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .quick-action-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--jc-radius-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--jc-spacing-md);
+            font-size: 24px;
+        }
+
+        .quick-action-icon.primary {
+            background: var(--jc-accent-teal-light);
+            color: var(--jc-accent-teal);
+        }
+
+        .quick-action-icon.success {
+            background: var(--jc-success-green-light);
+            color: var(--jc-success-green);
+        }
+
+        .quick-action-icon.warning {
+            background: var(--jc-warning-orange-light);
+            color: var(--jc-warning-orange);
+        }
+
+        .quick-action-icon.danger {
+            background: var(--jc-danger-red-light);
+            color: var(--jc-danger-red);
+        }
+
+        .quick-action-icon.purple {
+            background: var(--jc-tag-purple-bg);
+            color: var(--jc-tag-purple-text);
+        }
+
+        .quick-action-icon.info {
+            background: #E3F2FD;
+            color: #1976D2;
+        }
+
+        .quick-action-label {
+            font-size: var(--jc-font-size-body);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+        }
+
+        /* 待办事项 */
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: var(--jc-spacing-lg) 0;
+            border-bottom: 1px solid var(--jc-border-line-light);
+            transition: background var(--jc-transition-fast);
+        }
+
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+
+        .todo-item:hover {
+            background: var(--jc-bg-gray);
+            margin: 0 calc(-1 * var(--jc-spacing-2xl));
+            padding-left: var(--jc-spacing-2xl);
+            padding-right: var(--jc-spacing-2xl);
+        }
+
+        .todo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--jc-radius-circle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--jc-spacing-md);
+            flex-shrink: 0;
+        }
+
+        .todo-icon.inbound {
+            background: var(--jc-accent-teal-light);
+            color: var(--jc-accent-teal);
+        }
+
+        .todo-icon.outbound {
+            background: var(--jc-success-green-light);
+            color: var(--jc-success-green);
+        }
+
+        .todo-icon.transfer {
+            background: var(--jc-warning-orange-light);
+            color: var(--jc-warning-orange);
+        }
+
+        .todo-icon.express {
+            background: var(--jc-tag-purple-bg);
+            color: var(--jc-tag-purple-text);
+        }
+
+        .todo-icon.scrap {
+            background: var(--jc-danger-red-light);
+            color: var(--jc-danger-red);
+        }
+
+        .todo-badge.approving {
+            background: var(--jc-tag-blue-bg);
+            color: var(--jc-tag-blue-text);
+        }
+
+        .todo-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .todo-title {
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .todo-meta {
+            font-size: var(--jc-font-size-small);
+            color: var(--jc-text-light);
+        }
+
+        .todo-meta span {
+            margin-right: var(--jc-spacing-md);
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .todo-badge {
+            padding: 4px 10px;
+            border-radius: var(--jc-radius-tag);
+            font-size: 12px;
+            font-weight: var(--jc-font-weight-semibold);
+        }
+
+        .todo-badge.pending {
+            background: var(--jc-warning-orange-light);
+            color: var(--jc-warning-orange);
+        }
+
+        /* 两栏布局 */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--jc-spacing-xl);
+        }
+
+        @media (max-width: 1200px) {
+            .two-column-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 最近活动 */
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: var(--jc-spacing-md);
+            padding: var(--jc-spacing-md) 0;
+            border-bottom: 1px solid var(--jc-border-line-light);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+
+        .activity-dot.success { background: var(--jc-success-green); }
+        .activity-dot.warning { background: var(--jc-warning-orange); }
+        .activity-dot.info { background: var(--jc-accent-teal); }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-text {
+            font-size: var(--jc-font-size-body);
+            color: var(--jc-text-dark);
+            margin-bottom: 4px;
+        }
+
+        .activity-time {
+            font-size: var(--jc-font-size-small);
+            color: var(--jc-text-muted);
+        }
+
+        /* 空状态 */
+        .empty-todo {
+            text-align: center;
+            padding: var(--jc-spacing-3xl);
+            color: var(--jc-text-muted);
+        }
+
+        .empty-todo i {
+            font-size: 48px;
+            margin-bottom: var(--jc-spacing-md);
+            opacity: 0.5;
+        }
+
+        .empty-todo p {
+            font-size: var(--jc-font-size-body);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="dashboard.html" class="nav-link active">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/inbound.html" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/outbound.html" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/transfer.html" class="nav-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/query.html" class="nav-link">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/inventory.html" class="nav-link planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/express.html" class="nav-link">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/scrap.html" class="nav-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/qrcode.html" class="nav-link">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/config.html" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="pages/prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="pages/tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 class="page-title">工作台</h1>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <!-- 统计卡片 -->
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <div class="dashboard-card-icon blue">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="dashboard-card-info">
+                                <div class="dashboard-card-label">库存总量</div>
+                                <div class="dashboard-card-value" id="totalStock">0</div>
+                                <div class="dashboard-card-trend up">
+                                    <i class="fas fa-arrow-up"></i> 较上月 +12%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="dashboard-card-icon orange">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="dashboard-card-info">
+                                <div class="dashboard-card-label">待办事项</div>
+                                <div class="dashboard-card-value" id="pendingCount">0</div>
+                                <div class="dashboard-card-trend">
+                                    需要处理
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="dashboard-card-icon green">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="dashboard-card-info">
+                                <div class="dashboard-card-label">本月入库</div>
+                                <div class="dashboard-card-value" id="monthlyInbound">0</div>
+                                <div class="dashboard-card-trend up">
+                                    <i class="fas fa-arrow-up"></i> 较上月 +8%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="dashboard-card-icon purple">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="dashboard-card-info">
+                                <div class="dashboard-card-label">呆滞预警</div>
+                                <div class="dashboard-card-value" id="dormantAlert">0</div>
+                                <div class="dashboard-card-trend down">
+                                    需要关注
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 快捷入口 -->
+                    <div class="quick-actions">
+                        <a href="pages/inbound.html" class="quick-action-item">
+                            <div class="quick-action-icon primary">
+                                <i class="fas fa-plus-circle"></i>
+                            </div>
+                            <div class="quick-action-label">入库登记</div>
+                        </a>
+                        <a href="pages/outbound.html" class="quick-action-item">
+                            <div class="quick-action-icon success">
+                                <i class="fas fa-minus-circle"></i>
+                            </div>
+                            <div class="quick-action-label">出库申请</div>
+                        </a>
+                        <a href="pages/transfer.html" class="quick-action-item">
+                            <div class="quick-action-icon warning">
+                                <i class="fas fa-random"></i>
+                            </div>
+                            <div class="quick-action-label">移库操作</div>
+                        </a>
+                        <a href="pages/query.html" class="quick-action-item">
+                            <div class="quick-action-icon info">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="quick-action-label">库存查询</div>
+                        </a>
+                        <a href="pages/express.html" class="quick-action-item">
+                            <div class="quick-action-icon purple">
+                                <i class="fas fa-shipping-fast"></i>
+                            </div>
+                            <div class="quick-action-label">快递发运</div>
+                        </a>
+                        <a href="pages/query.html" class="quick-action-item">
+                            <div class="quick-action-icon danger">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="quick-action-label">数据报表</div>
+                        </a>
+                    </div>
+
+                    <!-- 两栏布局 -->
+                    <div class="two-column-layout">
+                        <!-- 待办事项 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-clipboard-list"></i>
+                                    待办事项
+                                </div>
+                                <button class="btn btn-text btn-sm" onclick="exportCompletedScrap()" title="导出已完成的报废审批单"><i class="fas fa-file-export"></i> 导出报废单</button>
+                            </div>
+                            <div class="card-body" style="padding: 0;">
+                                <ul class="todo-list" id="todoList">
+                                    <!-- 动态生成 -->
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- 最近活动 -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-history"></i>
+                                    最近活动
+                                </div>
+                            </div>
+                            <div class="card-body" style="padding-top: 10px;">
+                                <ul class="activity-list" id="activityList">
+                                    <li class="activity-item">
+                                        <div class="activity-dot success"></div>
+                                        <div class="activity-content">
+                                            <div class="activity-text">完成入库单 SYS-20260420-001</div>
+                                            <div class="activity-time">10分钟前</div>
+                                        </div>
+                                    </li>
+                                    <li class="activity-item">
+                                        <div class="activity-dot info"></div>
+                                        <div class="activity-content">
+                                            <div class="activity-text">提交领用申请 REQ-20260420-015</div>
+                                            <div class="activity-time">30分钟前</div>
+                                        </div>
+                                    </li>
+                                    <li class="activity-item">
+                                        <div class="activity-dot warning"></div>
+                                        <div class="activity-content">
+                                            <div class="activity-text">审批通过报废单 SCRAP-20260420-003</div>
+                                            <div class="activity-time">1小时前</div>
+                                        </div>
+                                    </li>
+                                    <li class="activity-item">
+                                        <div class="activity-dot success"></div>
+                                        <div class="activity-content">
+                                            <div class="activity-text">完成移库操作 TRANS-20260420-007</div>
+                                            <div class="activity-time">2小时前</div>
+                                        </div>
+                                    </li>
+                                    <li class="activity-item">
+                                        <div class="activity-dot info"></div>
+                                        <div class="activity-content">
+                                            <div class="activity-text">登录系统</div>
+                                            <div class="activity-time">今天 08:30</div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        // 检查登录状态
+        if (!Users.isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                
+                const roleMap = {
+                    admin: '系统管理员',
+                    keeper: '仓管员',
+                    engineer: '工程师'
+                };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+            }
+        }
+
+        // 加载统计数据
+        function loadStats() {
+            const inventory = Inventory.getAll();
+            
+            // 库存总量
+            const totalStock = inventory.reduce((sum, item) => sum + item.remainingStock, 0);
+            document.getElementById('totalStock').textContent = totalStock.toLocaleString();
+            
+            // 本月入库（模拟）
+            const monthlyInbound = Math.floor(Math.random() * 500) + 100;
+            document.getElementById('monthlyInbound').textContent = monthlyInbound;
+            
+            // 呆滞预警
+            const dormantAlert = inventory.filter(item => item.dormantDays > 90).length;
+            document.getElementById('dormantAlert').textContent = dormantAlert;
+        }
+
+        // ================= 报废审批步骤标签 =================
+        const SCRAP_STEP_LABELS = {
+            manager: '待部门经理审批',
+            gm: '待总经理审批',
+            finance: '待财务审批',
+            keeper: '待仓管处理',
+            completed: '已完成',
+            rejected: '已驳回'
+        };
+
+        // 加载待办事项
+        function loadTodos() {
+            const user = Users.getCurrentUser();
+            const todos = [];
+            
+            // 从 Flows 获取真实的待办流程（非报废类）
+            const pendingFlows = Flows.getPending();
+            
+            pendingFlows.forEach(flow => {
+                // 跳过报废流程（单独处理）
+                if (flow.type === 'scrap_workflow') return;
+
+                const typeConfig = {
+                    express: { icon: 'fa-shipping-fast', typeClass: 'express', label: '快递发运处理' },
+                    inbound_engineer: { icon: 'fa-sign-in-alt', typeClass: 'inbound', label: '入库补充审核' },
+                    outbound_request: { icon: 'fa-sign-out-alt', typeClass: 'outbound', label: '领用申请审批' },
+                    outbound_scrap: { icon: 'fa-trash-alt', typeClass: 'outbound', label: '报废出库审批' },
+                    transfer: { icon: 'fa-exchange-alt', typeClass: 'transfer', label: '移库申请审批' }
+                }[flow.type] || { icon: 'fa-tasks', typeClass: '', label: '待处理流程' };
+                
+                let meta = '';
+                let title = '';
+                
+                if (flow.type === 'express') {
+                    title = `${typeConfig.label} - ${flow.flowNo}`;
+                    meta = `申请人：${flow.creator} | 收件人：${flow.data.recipient || '-'} | 物料：${flow.data.materialDesc || '-'}`;
+                } else if (flow.type === 'inbound_engineer') {
+                    title = `${typeConfig.label} - ${flow.flowNo}`;
+                    meta = `申请人：${flow.creator} | 物料：${flow.data.materialName || '-'}`;
+                } else if (flow.type === 'outbound_request') {
+                    title = `${typeConfig.label} - ${flow.flowNo}`;
+                    meta = `申请人：${flow.creator} | 物料：${flow.data.materialName || '-'}`;
+                } else if (flow.type === 'outbound_scrap') {
+                    title = `${typeConfig.label} - ${flow.flowNo}`;
+                    meta = `申请人：${flow.creator} | 物料：${flow.data.materialName || '-'}`;
+                } else if (flow.type === 'transfer') {
+                    title = `${typeConfig.label} - ${flow.flowNo}`;
+                    meta = `申请人：${flow.creator} | 物料：${flow.data.materialName || '-'}`;
+                } else {
+                    title = `${typeConfig.label} - ${flow.flowNo}`;
+                    meta = `申请人：${flow.creator}`;
+                }
+                
+                todos.push({
+                    type: typeConfig.typeClass,
+                    icon: typeConfig.icon,
+                    title: title,
+                    meta: meta,
+                    badge: '待处理',
+                    badgeClass: 'pending',
+                    flowType: flow.type,
+                    flowId: flow.id
+                });
+            });
+
+            // ===== 报废审批待办（部门经理/总经理/财务）=====
+            const scrapApprovalSteps = ['manager', 'gm', 'finance'];
+            const scrapRoleLabels = { manager: '部门经理审批', gm: '总经理审批', finance: '财务审批' };
+            scrapApprovalSteps.forEach(step => {
+                const stepFlows = Flows.getScrapWorkflowTodos(step);
+                stepFlows.forEach(flow => {
+                    todos.push({
+                        type: 'scrap',
+                        icon: 'fa-file-alt',
+                        title: `报废${scrapRoleLabels[step]} - ${flow.flowNo}`,
+                        meta: `申请人：${flow.creator} | 残值：¥${flow.data.totalRemaining} | 物料：${flow.data.items?.length || 0}项`,
+                        badge: SCRAP_STEP_LABELS[step],
+                        badgeClass: 'pending',
+                        flowType: 'scrap_workflow',
+                        flowId: flow.id,
+                        scrapStep: step
+                    });
+                });
+            });
+
+            // ===== 仓管待办（报废已审批完成待仓管确认）=====
+            const keeperTodos = Flows.getScrapWorkflowTodos('keeper');
+            keeperTodos.forEach(flow => {
+                todos.push({
+                    type: 'scrap',
+                    icon: 'fa-warehouse',
+                    title: `报废仓管处理 - ${flow.flowNo}`,
+                    meta: `申请人：${flow.creator} | 残值：¥${flow.data.totalRemaining} | 物料：${flow.data.items?.length || 0}项`,
+                    badge: '待仓管处理',
+                    badgeClass: 'approving',
+                    flowType: 'scrap_workflow',
+                    flowId: flow.id,
+                    scrapStep: 'keeper'
+                });
+            });
+            
+            // 更新待办数量
+            document.getElementById('pendingCount').textContent = todos.length;
+            
+            // 渲染待办列表
+            const todoList = document.getElementById('todoList');
+            if (todos.length === 0) {
+                todoList.innerHTML = `
+                    <li class="empty-todo">
+                        <i class="fas fa-check-circle"></i>
+                        <p>暂无待办事项</p>
+                    </li>
+                `;
+            } else {
+                todoList.innerHTML = todos.map(todo => {
+                    let actionBtn = '';
+                    if (todo.flowType === 'express') {
+                        actionBtn = `<a href="pages/express.html?tab=process" class="btn btn-primary btn-sm">处理</a>`;
+                    } else if (todo.flowType === 'scrap_workflow' && todo.scrapStep === 'keeper') {
+                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="scrapKeeperConfirm(${todo.flowId})">确认处理</button>`;
+                    } else if (todo.flowType === 'scrap_workflow') {
+                        actionBtn = `<button class="btn btn-primary btn-sm" onclick="openScrapApproveModal(${todo.flowId}, '${todo.scrapStep}')">审批</button>`;
+                    } else {
+                        actionBtn = `<button class="btn btn-primary btn-sm" disabled>处理</button>`;
+                    }
+                    return `
+                    <li class="todo-item">
+                        <div class="todo-icon ${todo.type}">
+                            <i class="fas ${todo.icon}"></i>
+                        </div>
+                        <div class="todo-content">
+                            <div class="todo-title">${todo.title}</div>
+                            <div class="todo-meta">
+                                <span><i class="far fa-user"></i> ${todo.meta.split(' | ')[0]}</span>
+                                <span><i class="far fa-clock"></i> ${todo.meta.split(' | ').slice(1).join(' | ')}</span>
+                            </div>
+                        </div>
+                        <div class="todo-actions">
+                            <span class="todo-badge ${todo.badgeClass}">${todo.badge}</span>
+                            ${actionBtn}
+                        </div>
+                    </li>
+                `}).join('');
+            }
+        }
+
+        // ================= 报废审批操作（工作台内联）=================
+        function openScrapApproveModal(flowId, role) {
+            const flow = Flows.getAll().find(f => f.id === flowId);
+            if (!flow) return;
+            const roleName = role === 'manager' ? '部门经理审批' : role === 'gm' ? '总经理审批' : '财务审批';
+            const itemsSummary = (flow.data.items || []).map((it, i) => 
+                `<tr><td>${i+1}</td><td>${it.materialCode}</td><td>${it.partDesc}</td><td>${it.qty}</td><td>${it.originalValue}</td><td>${it.remainingValue}</td></tr>`
+            ).join('');
+            const content = `
+                <div style="max-height:60vh;overflow-y:auto;">
+                    <div style="margin-bottom:16px;">
+                        <div style="font-size:15px;font-weight:600;margin-bottom:8px;">${flow.flowNo}</div>
+                        <div style="font-size:13px;color:var(--jc-text-light);">
+                            申请人：${flow.creator} | 残值合计：<span style="color:var(--jc-danger-red);font-weight:600;">¥${flow.data.totalRemaining}</span>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <div style="font-weight:600;margin-bottom:8px;font-size:14px;">物料清单</div>
+                        <table class="table" style="font-size:12px;">
+                            <thead><tr><th>序号</th><th>物料编号</th><th>零件描述</th><th>数量</th><th>原值</th><th>残值</th></tr></thead>
+                            <tbody>${itemsSummary}</tbody>
+                        </table>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <div style="font-weight:600;margin-bottom:8px;font-size:14px;">报废原因</div>
+                        <div style="font-size:13px;padding:10px;background:var(--jc-bg-gray);border-radius:4px;">${flow.data.reason}</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">审批意见（选填）</label>
+                        <textarea class="form-control" id="scrapComment_${flowId}" rows="2" placeholder="请输入审批意见..."></textarea>
+                    </div>
+                    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+                        <button class="btn btn-secondary" onclick="Modal.close(this)">取消</button>
+                        <button class="btn btn-danger" onclick="scrapReject(${flowId}, '${role}')">驳回</button>
+                        <button class="btn btn-primary" onclick="scrapApprove(${flowId}, '${role}')">通过</button>
+                    </div>
+                </div>
+            `;
+            Modal.open(content, { title: roleName, size: 'lg' });
+        }
+
+        function scrapApprove(flowId, role) {
+            const comment = document.getElementById(`scrapComment_${flowId}`)?.value || '';
+            const flow = Flows.getAll().find(f => f.id === flowId);
+            if (!flow) return;
+            const totalRemaining = parseFloat(flow.data.totalRemaining) || 0;
+            let nextStep;
+            if (role === 'manager') {
+                if (totalRemaining >= 5000) nextStep = 'gm';
+                else if (totalRemaining >= 3000) nextStep = 'finance';
+                else nextStep = 'keeper';
+            } else if (role === 'gm') {
+                if (totalRemaining >= 3000) nextStep = 'finance';
+                else nextStep = 'keeper';
+            } else if (role === 'finance') {
+                nextStep = 'keeper';
+            }
+            const approverName = role === 'manager' ? '部门经理' : role === 'gm' ? '总经理' : '财务';
+            Flows.advance(flowId, nextStep, approverName, comment);
+            Modal.close(document.querySelector('.modal-close'));
+            Toast.success('审批通过！');
+            loadTodos();
+        }
+
+        function scrapReject(flowId, role) {
+            const comment = document.getElementById(`scrapComment_${flowId}`)?.value || '';
+            if (!comment.trim()) {
+                Toast.error('驳回必须填写审批意见');
+                return;
+            }
+            const approverName = role === 'manager' ? '部门经理' : role === 'gm' ? '总经理' : '财务';
+            Flows.rejectWithHistory(flowId, approverName, comment);
+            Modal.close(document.querySelector('.modal-close'));
+            Toast.success('已驳回申请');
+            loadTodos();
+        }
+
+        function scrapKeeperConfirm(flowId) {
+            Modal.confirm('确认已处理该报废申请？', () => {
+                Flows.advance(flowId, 'completed', '仓管员', '已确认处理');
+                Toast.success('报废申请已处理完成！');
+                loadTodos();
+            });
+        }
+
+        // ================= 导出已完成报废单 =================
+        function exportCompletedScrap() {
+            const list = Flows.getAll().filter(f => f.type === 'scrap_workflow' && f.currentStep === 'completed');
+            if (list.length === 0) {
+                Toast.error('暂无已完成的报废申请单可导出');
+                return;
+            }
+            let csv = '\uFEFF流程单号,申请人,部门,申请时间,物料数,数量合计,原值合计,残值合计,报废原因,处理方式,审批记录\n';
+            list.forEach(flow => {
+                const history = (flow.approvalHistory || []).map(h => `${SCRAP_STEP_LABELS[h.step]||h.step}:${h.approver}(${h.result==='approved'?'通过':'驳回'})`).join('; ');
+                csv += `${flow.flowNo},${flow.creator},${flow.data.department||''},${DateUtils.format(flow.createTime,'YYYY-MM-DD HH:mm')},${flow.data.items?.length||0},${flow.data.totalQty},${flow.data.totalOriginal},${flow.data.totalRemaining},"${(flow.data.reason||'').replace(/"/g,'""')}","${(flow.data.disposeTypes||[]).join(';')}","${history}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `报废申请单导出_${DateUtils.now('YYYYMMDD_HHmmss')}.csv`;
+            link.click();
+            Toast.success('导出成功！');
+        }
+
+        // 侧边栏折叠
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // 退出登录
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
+            });
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadStats();
+            loadTodos();
+        });
+    </script>
+</body>
+</html>

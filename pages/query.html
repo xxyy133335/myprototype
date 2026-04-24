@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>综合查询中心 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* 查询中心样式 */
+        .query-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--jc-border-line);
+            margin-bottom: var(--jc-spacing-xl);
+            background: var(--jc-card-white);
+            padding: 0 var(--jc-spacing-xl);
+            border-radius: var(--jc-radius-card) var(--jc-radius-card) 0 0;
+        }
+
+        .query-tab {
+            padding: var(--jc-spacing-md) var(--jc-spacing-xl);
+            font-size: var(--jc-font-size-body);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all var(--jc-transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .query-tab:hover {
+            color: var(--jc-accent-teal);
+        }
+
+        .query-tab.active {
+            color: var(--jc-accent-teal);
+            border-bottom-color: var(--jc-accent-teal);
+        }
+
+        /* 搜索面板 */
+        .query-search-panel {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-xl);
+            margin-bottom: var(--jc-spacing-lg);
+        }
+
+        .query-search-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--jc-spacing-lg);
+            align-items: end;
+        }
+
+        .query-search-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        .query-search-actions {
+            display: flex;
+            gap: var(--jc-spacing-md);
+            margin-top: var(--jc-spacing-lg);
+            padding-top: var(--jc-spacing-lg);
+            border-top: 1px solid var(--jc-border-line-light);
+        }
+
+        /* 数据表格 */
+        .query-result-panel {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            overflow: hidden;
+        }
+
+        .query-result-panel .table {
+            font-size: 13px;
+        }
+
+        .query-result-panel .table th,
+        .query-result-panel .table td {
+            padding: 12px;
+            white-space: nowrap;
+        }
+
+        /* 统计卡片 */
+        .query-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--jc-spacing-lg);
+            margin-bottom: var(--jc-spacing-lg);
+        }
+
+        @media (max-width: 1200px) {
+            .query-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .query-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .query-stat-card {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-md);
+        }
+
+        .query-stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--jc-radius-control);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .query-stat-icon.blue {
+            background: var(--jc-accent-teal-light);
+            color: var(--jc-accent-teal);
+        }
+
+        .query-stat-icon.orange {
+            background: var(--jc-warning-orange-light);
+            color: var(--jc-warning-orange);
+        }
+
+        .query-stat-icon.green {
+            background: var(--jc-success-green-light);
+            color: var(--jc-success-green);
+        }
+
+        .query-stat-icon.red {
+            background: var(--jc-danger-red-light);
+            color: var(--jc-danger-red);
+        }
+
+        .query-stat-info {
+            flex: 1;
+        }
+
+        .query-stat-label {
+            font-size: 13px;
+            color: var(--jc-text-light);
+            margin-bottom: 4px;
+        }
+
+        .query-stat-value {
+            font-size: 24px;
+            font-weight: var(--jc-font-weight-bold);
+            color: var(--jc-text-dark);
+        }
+
+        /* 日期范围 */
+        .date-range {
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .date-range .form-control {
+            flex: 1;
+        }
+
+        .date-range-separator {
+            color: var(--jc-text-muted);
+        }
+
+        /* 导出按钮 */
+        .export-btn {
+            margin-left: auto;
+        }
+
+        /* 预警样式 */
+        .warning-cell {
+            color: var(--jc-warning-orange);
+            font-weight: var(--jc-font-weight-bold);
+        }
+
+        .danger-cell {
+            color: var(--jc-danger-red);
+            font-weight: var(--jc-font-weight-bold);
+        }
+
+        /* 表格容器滚动 */
+        .table-scroll-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        /* 固定表头 */
+        .table-scroll-container .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table-scroll-container .table thead th {
+            background: var(--jc-bg-gray);
+            box-shadow: 0 1px 0 var(--jc-border-line);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="../802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="../dashboard.html" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inbound.html" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="outbound.html" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="transfer.html" class="nav-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="query.html" class="nav-link active">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inventory.html" class="nav-link planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="express.html" class="nav-link">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="scrap.html" class="nav-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="qrcode.html" class="nav-link">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="config.html" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="../dashboard.html">首页</a>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current">综合查询</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <!-- 页面标题 -->
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <div>
+                                <h1 class="page-title">综合查询中心</h1>
+                                <p class="page-description">多维度库存数据查询与分析</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 切换 -->
+                    <div class="query-tabs">
+                        <div class="query-tab active" data-tab="stock">
+                            <i class="fas fa-boxes"></i>
+                            <span>库存查询</span>
+                        </div>
+                        <div class="query-tab" data-tab="inbound">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span>入库查询</span>
+                        </div>
+                        <div class="query-tab" data-tab="outbound">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>出库查询</span>
+                        </div>
+                        <div class="query-tab" data-tab="aging">
+                            <i class="fas fa-clock"></i>
+                            <span>账龄查询</span>
+                        </div>
+                        <div class="query-tab" data-tab="dormant">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>呆滞查询</span>
+                        </div>
+                    </div>
+
+                    <!-- 库存查询 -->
+                    <div class="tab-content active" id="stockTab">
+                        <!-- 二维码操作工具栏 -->
+                        <div class="query-search-panel" style="margin-bottom: var(--jc-spacing-md); padding: var(--jc-spacing-md) var(--jc-spacing-xl);">
+                            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--jc-spacing-md);">
+                                <div style="display: flex; align-items: center; gap: var(--jc-spacing-md);">
+                                    <input type="checkbox" id="stockCheckAll" class="form-check-input" style="width: 18px; height: 18px;" onchange="toggleStockCheckAll()">
+                                    <label for="stockCheckAll" style="cursor: pointer; font-size: var(--jc-font-size-body);">全选</label>
+                                    <span style="color: var(--jc-text-light);">已选择 <strong id="stockSelectedCount" style="color: var(--jc-accent-teal);">0</strong> 板</span>
+                                </div>
+                                <div style="display: flex; gap: var(--jc-spacing-md);">
+                                    <button class="btn btn-primary" onclick="generateStockQR()">
+                                        <i class="fas fa-qrcode"></i> 生成二维码 
+                                    </button>
+                                    <button class="btn btn-success" onclick="printStockQR()">
+                                        <i class="fas fa-print"></i> 打印选中标签
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 统计卡片 -->
+                        <div class="query-stats">
+                            <div class="query-stat-card">
+                                <div class="query-stat-icon blue">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="query-stat-info">
+                                    <div class="query-stat-label">库存种类</div>
+                                    <div class="query-stat-value" id="stockTypes">0</div>
+                                </div>
+                            </div>
+                            <div class="query-stat-card">
+                                <div class="query-stat-icon green">
+                                    <i class="fas fa-cubes"></i>
+                                </div>
+                                <div class="query-stat-info">
+                                    <div class="query-stat-label">库存总量</div>
+                                    <div class="query-stat-value" id="stockTotal">0</div>
+                                </div>
+                            </div>
+                            <div class="query-stat-card">
+                                <div class="query-stat-icon orange">
+                                    <i class="fas fa-warehouse"></i>
+                                </div>
+                                <div class="query-stat-info">
+                                    <div class="query-stat-label">涉及仓库</div>
+                                    <div class="query-stat-value" id="stockWarehouses">0</div>
+                                </div>
+                            </div>
+                            <div class="query-stat-card">
+                                <div class="query-stat-icon red">
+                                    <i class="fas fa-yen-sign"></i>
+                                </div>
+                                <div class="query-stat-info">
+                                    <div class="query-stat-label">库存总值</div>
+                                    <div class="query-stat-value" id="stockValue">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 搜索面板 -->
+                        <div class="query-search-panel">
+                            <div class="query-search-grid">
+                                <div class="form-group">
+                                    <label class="form-label">物料名称</label>
+                                    <input type="text" class="form-control" id="stockName" placeholder="请输入物料名称">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">物料编号</label>
+                                    <input type="text" class="form-control" id="stockCode" placeholder="请输入物料编号">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">项目编号</label>
+                                    <input type="text" class="form-control" id="stockProject" placeholder="请输入项目编号">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">仓库</label>
+                                    <select class="form-control" id="stockWarehouse">
+                                        <option value="">全部仓库</option>
+                                        <option value="A">仓库 A</option>
+                                        <option value="B">仓库 B</option>
+                                        <option value="C">仓库 C</option>
+                                        <option value="D">仓库 D</option>
+                                        <option value="E">仓库 E</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">物料类别</label>
+                                    <select class="form-control" id="stockCategory">
+                                        <option value="">全部类别</option>
+                                        <option value="室外机">室外机</option>
+                                        <option value="室内机">室内机</option>
+                                        <option value="压缩机">压缩机</option>
+                                        <option value="控制箱">控制箱</option>
+                                        <option value="工装">工装</option>
+                                        <option value="化学品">化学品</option>
+                                        <option value="新物料">新物料</option>
+                                        <option value="拆机物料">拆机物料</option>
+                                        <option value="工具辅料">工具辅料</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="query-search-actions">
+                                <button class="btn btn-primary" onclick="searchStock()">
+                                    <i class="fas fa-search"></i> 查询
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetStockSearch()">
+                                    <i class="fas fa-undo"></i> 重置
+                                </button>
+                                <button class="btn btn-outline export-btn" onclick="exportData()">
+                                    <i class="fas fa-download"></i> 导出
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 查询结果 -->
+                        <div class="query-result-panel">
+                            <div class="table-scroll-container">
+                                <table class="table" id="stockTable">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;"><input type="checkbox" class="table-check" id="stockTableCheckAll" onchange="toggleStockCheckAll()"></th>
+                                            <th>物料名称</th>
+                                            <th>物料编号</th>
+                                            <th>申请人</th>
+                                            <th>项目编号</th>
+                                            <th>PBU</th>
+                                            <th>免3C</th>
+                                            <th>物料类别</th>
+                                            <th>所属人</th>
+                                            <th>所属部门</th>
+                                            <th>PO号</th>
+                                            <th>供应商编号</th>
+                                            <th>数量</th>
+                                            <th>单位</th>
+                                            <th>入库时间</th>
+                                            <th>入库单号</th>
+                                            <th>剩余库存</th>
+                                            <th>账龄周期</th>
+                                            <th>呆滞周期</th>
+                                            <th>仓库</th>
+                                            <th>货位</th>
+                                            <th style="width: 80px;">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 入库查询 -->
+                    <div class="tab-content" id="inboundTab">
+                        <div class="query-search-panel">
+                            <div class="query-search-grid">
+                                <div class="form-group">
+                                    <label class="form-label">物料名称/编号</label>
+                                    <input type="text" class="form-control" id="inboundMaterial" placeholder="请输入关键词">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">项目编号/PO号</label>
+                                    <input type="text" class="form-control" id="inboundProject" placeholder="请输入关键词">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">仓库</label>
+                                    <select class="form-control" id="inboundWarehouse">
+                                        <option value="">全部仓库</option>
+                                        <option value="A">仓库 A</option>
+                                        <option value="B">仓库 B</option>
+                                        <option value="C">仓库 C</option>
+                                        <option value="D">仓库 D</option>
+                                        <option value="E">仓库 E</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">入库日期</label>
+                                    <div class="date-range">
+                                        <input type="date" class="form-control" id="inboundStartDate">
+                                        <span class="date-range-separator">自</span>
+                                        <input type="date" class="form-control" id="inboundEndDate">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="query-search-actions">
+                                <button class="btn btn-primary" onclick="searchInbound()">
+                                    <i class="fas fa-search"></i> 查询
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetInboundSearch()">
+                                    <i class="fas fa-undo"></i> 重置
+                                </button>
+                                <button class="btn btn-outline export-btn" onclick="exportData()">
+                                    <i class="fas fa-download"></i> 导出
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="query-result-panel">
+                            <div class="table-scroll-container">
+                                <table class="table" id="inboundTable">
+                                    <thead>
+                                        <tr>
+                                            <th>入库单号</th>
+                                            <th>物料名称</th>
+                                            <th>物料编号</th>
+                                            <th>项目编号</th>
+                                            <th>PBU</th>
+                                            <th>物料类别</th>
+                                            <th>数量</th>
+                                            <th>单位</th>
+                                            <th>仓库</th>
+                                            <th>货位</th>
+                                            <th>入库时间</th>
+                                            <th>申请人</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 出库查询 -->
+                    <div class="tab-content" id="outboundTab">
+                        <div class="query-search-panel">
+                            <div class="query-search-grid">
+                                <div class="form-group">
+                                    <label class="form-label">物料名称/编号</label>
+                                    <input type="text" class="form-control" id="outboundMaterial" placeholder="请输入关键词">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">项目编号/PO号</label>
+                                    <input type="text" class="form-control" id="outboundProject" placeholder="请输入关键词">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">仓库</label>
+                                    <select class="form-control" id="outboundWarehouse">
+                                        <option value="">全部仓库</option>
+                                        <option value="A">仓库 A</option>
+                                        <option value="B">仓库 B</option>
+                                        <option value="C">仓库 C</option>
+                                        <option value="D">仓库 D</option>
+                                        <option value="E">仓库 E</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">出库日期</label>
+                                    <div class="date-range">
+                                        <input type="date" class="form-control" id="outboundStartDate">
+                                        <span class="date-range-separator">自</span>
+                                        <input type="date" class="form-control" id="outboundEndDate">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="query-search-actions">
+                                <button class="btn btn-primary" onclick="searchOutbound()">
+                                    <i class="fas fa-search"></i> 查询
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetOutboundSearch()">
+                                    <i class="fas fa-undo"></i> 重置
+                                </button>
+                                <button class="btn btn-outline export-btn" onclick="exportData()">
+                                    <i class="fas fa-download"></i> 导出
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="query-result-panel">
+                            <div class="table-scroll-container">
+                                <table class="table" id="outboundTable">
+                                    <thead>
+                                        <tr>
+                                            <th>出库单号</th>
+                                            <th>物料名称</th>
+                                            <th>物料编号</th>
+                                            <th>项目编号</th>
+                                            <th>出库类型</th>
+                                            <th>数量</th>
+                                            <th>单位</th>
+                                            <th>仓库</th>
+                                            <th>出库时间</th>
+                                            <th>申请人</th>
+                                            <th>状态</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 账龄查询 -->
+                    <div class="tab-content" id="agingTab">
+                        <div class="query-search-panel">
+                            <div class="query-search-grid">
+                                <div class="form-group">
+                                    <label class="form-label">账龄超期阈值</label>
+                                    <select class="form-control" id="agingThreshold">
+                                        <option value="30">大于30备</option>
+                                        <option value="60">大于60备</option>
+                                        <option value="90" selected>大于90备</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">物料类别</label>
+                                    <select class="form-control" id="agingCategory">
+                                        <option value="">全部类别</option>
+                                        <option value="室外机">室外机</option>
+                                        <option value="室内机">室内机</option>
+                                        <option value="压缩机">压缩机</option>
+                                        <option value="控制箱">控制箱</option>
+                                        <option value="工装">工装</option>
+                                        <option value="化学品">化学品</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">仓库</label>
+                                    <select class="form-control" id="agingWarehouse">
+                                        <option value="">全部仓库</option>
+                                        <option value="A">仓库 A</option>
+                                        <option value="B">仓库 B</option>
+                                        <option value="C">仓库 C</option>
+                                        <option value="D">仓库 D</option>
+                                        <option value="E">仓库 E</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="query-search-actions">
+                                <button class="btn btn-primary" onclick="searchAging()">
+                                    <i class="fas fa-search"></i> 查询
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetAgingSearch()">
+                                    <i class="fas fa-undo"></i> 重置
+                                </button>
+                                <button class="btn btn-outline export-btn" onclick="exportData()">
+                                    <i class="fas fa-download"></i> 导出
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="query-result-panel">
+                            <div class="table-scroll-container">
+                                <table class="table" id="agingTable">
+                                    <thead>
+                                        <tr>
+                                            <th>物料名称</th>
+                                            <th>物料编号</th>
+                                            <th>项目编号</th>
+                                            <th>物料类别</th>
+                                            <th>入库时间</th>
+                                            <th>账龄天数</th>
+                                            <th>剩余库存</th>
+                                            <th>仓库</th>
+                                            <th>货位</th>
+                                            <th>所属人</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 呆滞查询 -->
+                    <div class="tab-content" id="dormantTab">
+                        <div class="query-search-panel">
+                            <div class="query-search-grid">
+                                <div class="form-group">
+                                    <label class="form-label">呆滞超期阈值</label>
+                                    <select class="form-control" id="dormantThreshold">
+                                        <option value="30">大于30备</option>
+                                        <option value="90">大于90备</option>
+                                        <option value="180" selected>大于180备</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">物料类别</label>
+                                    <select class="form-control" id="dormantCategory">
+                                        <option value="">全部类别</option>
+                                        <option value="室外机">室外机</option>
+                                        <option value="室内机">室内机</option>
+                                        <option value="压缩机">压缩机</option>
+                                        <option value="控制箱">控制箱</option>
+                                        <option value="工装">工装</option>
+                                        <option value="化学品">化学品</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">仓库</label>
+                                    <select class="form-control" id="dormantWarehouse">
+                                        <option value="">全部仓库</option>
+                                        <option value="A">仓库 A</option>
+                                        <option value="B">仓库 B</option>
+                                        <option value="C">仓库 C</option>
+                                        <option value="D">仓库 D</option>
+                                        <option value="E">仓库 E</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="query-search-actions">
+                                <button class="btn btn-primary" onclick="searchDormant()">
+                                    <i class="fas fa-search"></i> 查询
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetDormantSearch()">
+                                    <i class="fas fa-undo"></i> 重置
+                                </button>
+                                <button class="btn btn-outline export-btn" onclick="exportData()">
+                                    <i class="fas fa-download"></i> 导出
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="query-result-panel">
+                            <div class="table-scroll-container">
+                                <table class="table" id="dormantTable">
+                                    <thead>
+                                        <tr>
+                                            <th>物料名称</th>
+                                            <th>物料编号</th>
+                                            <th>项目编号</th>
+                                            <th>物料类别</th>
+                                            <th>入库时间</th>
+                                            <th>呆滞天数</th>
+                                            <th>剩余库存</th>
+                                            <th>仓库</th>
+                                            <th>货位</th>
+                                            <th>所属人</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/data.js"></script>
+    <script>
+        // 检查登录状态 
+        if (!Users.isLoggedIn()) {
+            window.location.href = '../index.html';
+        }
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                
+                const roleMap = {
+                    admin: '系统管理员',
+                    keeper: '仓管员',
+                    engineer: '工程师'
+                };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+            }
+        }
+
+        // Tab 切换
+        document.querySelectorAll('.query-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.dataset.tab;
+                
+                document.querySelectorAll('.query-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(targetTab + 'Tab').classList.add('active');
+                
+                // 加载对应数据
+                if (targetTab === 'stock') {
+                    loadStockStats();
+                    searchStock();
+                } else if (targetTab === 'inbound') {
+                    searchInbound();
+                } else if (targetTab === 'outbound') {
+                    searchOutbound();
+                } else if (targetTab === 'aging') {
+                    searchAging();
+                } else if (targetTab === 'dormant') {
+                    searchDormant();
+                }
+            });
+        });
+
+        // 加载库存统计
+        function loadStockStats() {
+            const inventory = Inventory.getAll();
+            
+            document.getElementById('stockTypes').textContent = inventory.length;
+            document.getElementById('stockTotal').textContent = inventory.reduce((sum, item) => sum + item.remainingStock, 0).toLocaleString();
+            
+            const warehouses = new Set(inventory.map(item => item.warehouse));
+            document.getElementById('stockWarehouses').textContent = warehouses.size;
+            
+            const totalValue = inventory.reduce((sum, item) => sum + (item.remainingStock * parseFloat(item.unitPrice || 0)), 0);
+            document.getElementById('stockValue').textContent = '¥' + (totalValue / 10000).toFixed(1) + '中';
+        }
+
+        // 库存查询
+        function searchStock() {
+            let data = Inventory.getAll();
+            
+            const name = document.getElementById('stockName').value.toLowerCase();
+            const code = document.getElementById('stockCode').value.toLowerCase();
+            const project = document.getElementById('stockProject').value.toLowerCase();
+            const warehouse = document.getElementById('stockWarehouse').value;
+            const category = document.getElementById('stockCategory').value;
+            
+            if (name) data = data.filter(item => item.materialName.toLowerCase().includes(name));
+            if (code) data = data.filter(item => item.materialCode && item.materialCode.toLowerCase().includes(code));
+            if (project) data = data.filter(item => item.projectCode.toLowerCase().includes(project));
+            if (warehouse) data = data.filter(item => item.warehouse === warehouse);
+            if (category) data = data.filter(item => item.materialCategory === category);
+            
+            renderStockTable(data);
+        }
+
+        let stockSelectedItems = [];
+
+        function renderStockTable(data) {
+            const tbody = document.querySelector('#stockTable tbody');
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="22" class="text-center" style="padding: 40px;">暂无数据</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => {
+                const isChecked = stockSelectedItems.some(s => s.id === item.id);
+                return `
+                <tr>
+                    <td><input type="checkbox" class="table-check" data-id="${item.id}" ${isChecked ? 'checked' : ''} onchange="toggleStockItem(${item.id}, this.checked)"></td>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.applicant}</td>
+                    <td>${item.projectCode}</td>
+                    <td>${item.pbu}</td>
+                    <td>${item.exempt3C}</td>
+                    <td><span class="tag blue">${item.materialCategory}</span></td>
+                    <td>${item.owner}</td>
+                    <td>${item.department}</td>
+                    <td>${item.poNumber}</td>
+                    <td>${item.supplierCode || '-'}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit}</td>
+                    <td>${DateUtils.format(item.inboundTime, 'YYYY-MM-DD')}</td>
+                    <td>${item.inboundNo}</td>
+                    <td class="${item.remainingStock < 10 ? 'danger-cell' : ''}">${item.remainingStock}</td>
+                    <td class="${item.agingDays > 90 ? 'warning-cell' : ''}">${item.agingDays}备</td>
+                    <td class="${item.dormantDays > 90 ? 'danger-cell' : ''}">${item.dormantDays}备</td>
+                    <td>${item.warehouse}</td>
+                    <td>${item.location}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="printSingleStockQR(${item.id})" title="打印二维码">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function toggleStockItem(id, checked) {
+            if (checked) {
+                const item = Inventory.getById(id);
+                if (item && !stockSelectedItems.some(s => s.id === id)) {
+                    stockSelectedItems.push(item);
+                }
+            } else {
+                stockSelectedItems = stockSelectedItems.filter(s => s.id !== id);
+            }
+            updateStockSelectCount();
+        }
+
+        function toggleStockCheckAll() {
+            const checked = document.getElementById('stockCheckAll').checked || document.getElementById('stockTableCheckAll').checked;
+            document.getElementById('stockCheckAll').checked = checked;
+            document.getElementById('stockTableCheckAll').checked = checked;
+            const visibleRows = document.querySelectorAll('#stockTable tbody tr');
+            visibleRows.forEach(row => {
+                const cb = row.querySelector('.table-check');
+                if (cb) {
+                    cb.checked = checked;
+                    const id = parseInt(cb.dataset.id);
+                    toggleStockItem(id, checked);
+                }
+            });
+        }
+
+        function updateStockSelectCount() {
+            document.getElementById('stockSelectedCount').textContent = stockSelectedItems.length;
+        }
+
+        function getQRText(item) {
+            const parts = [];
+            if (item.materialName) parts.push('物料名称:' + item.materialName);
+            if (item.materialCode) parts.push('物料编号:' + item.materialCode);
+            if (item.owner) parts.push('所属人:' + item.owner);
+            if (item.department) parts.push('所属部门"' + item.department);
+            if (item.warehouse) parts.push('仓库:' + item.warehouse);
+            if (item.location) parts.push('货位:' + item.location);
+            return parts.join(' | ');
+        }
+
+        function getTemplate() {
+            return Storage.get('qrcode_template', {
+                width: 60, height: 90, qrSize: 120, fontSize: 12,
+                showName: true, showCode: true, showOwner: true,
+                showDept: false, showWarehouse: false, showLocation: false
+            });
+        }
+
+        function printSingleStockQR(id) {
+            const item = Inventory.getById(id);
+            if (!item) return;
+            printStockLabels([item]);
+        }
+
+        function generateStockQR() {
+            if (stockSelectedItems.length === 0) {
+                Toast.warning('请先从表格中勾选需要生成二维码的物料');
+                return;
+            }
+            // 打开预览弹窗
+            const tpl = getTemplate();
+            let gridHtml = '<div class="modal-preview-grid">';
+            stockSelectedItems.forEach((item, idx) => {
+                const qrId = 'stockqr-' + idx;
+                let infoHtml = '';
+                if (tpl.showName && item.materialName) infoHtml += `<div style="font-weight:600;">${item.materialName}</div>`;
+                if (tpl.showCode && item.materialCode) infoHtml += `<div>编号: ${item.materialCode}</div>`;
+                if (tpl.showOwner && item.owner) infoHtml += `<div>所属人: ${item.owner}</div>`;
+                if (tpl.showDept && item.department) infoHtml += `<div>部门: ${item.department}</div>`;
+                if (tpl.showWarehouse && item.warehouse) infoHtml += `<div>仓库: ${item.warehouse}</div>`;
+                if (tpl.showLocation && item.location) infoHtml += `<div>货位: ${item.location}</div>`;
+                gridHtml += `
+                    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06);padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+                        <div style="background:#fff;padding:6px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);" id="${qrId}"></div>
+                        <div style="text-align:center;font-size:${Math.max(10, tpl.fontSize - 1)}px;color:#333;line-height:1.5;">${infoHtml}</div>
+                    </div>
+                `;
+            });
+            gridHtml += '</div>';
+
+            const content = document.createElement('div');
+            content.innerHTML = gridHtml;
+
+            Modal.open(content, { size: 'xl', title: `二维码预规"(${stockSelectedItems.length} 中"` });
+
+            setTimeout(() => {
+                stockSelectedItems.forEach((item, idx) => {
+                    const wrap = document.getElementById('stockqr-' + idx);
+                    if (wrap) {
+                        new QRCode(wrap, {
+                            text: getQRText(item),
+                            width: Math.min(tpl.qrSize, 100),
+                            height: Math.min(tpl.qrSize, 100),
+                            colorDark: '#000000',
+                            colorLight: '#ffffff',
+                            correctLevel: QRCode.CorrectLevel.M
+                        });
+                    }
+                });
+            }, 100);
+        }
+
+        function printStockQR() {
+            if (stockSelectedItems.length === 0) {
+                Toast.warning('请先从表格中勾选需要打印的物料');
+                return;
+            }
+            printStockLabels(stockSelectedItems);
+        }
+
+        function printStockLabels(items) {
+            const tpl = getTemplate();
+            const pxPerMm = 3.78;
+            const labelW = Math.round(tpl.width * pxPerMm);
+            const labelH = Math.round(tpl.height * pxPerMm);
+
+            let printHtml = '<div style="display:flex;flex-wrap:wrap;gap:0;">';
+            items.forEach((item, idx) => {
+                const qrId = 'pqr-' + idx;
+                let infoHtml = '';
+                if (tpl.showName && item.materialName) infoHtml += `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">物料: ${escapeHtml(item.materialName)}</div>`;
+                if (tpl.showCode && item.materialCode) infoHtml += `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">编号: ${escapeHtml(item.materialCode)}</div>`;
+                if (tpl.showOwner && item.owner) infoHtml += `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">所属人: ${escapeHtml(item.owner)}</div>`;
+                if (tpl.showDept && item.department) infoHtml += `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">部门: ${escapeHtml(item.department)}</div>`;
+                if (tpl.showWarehouse && item.warehouse) infoHtml += `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">仓库: ${escapeHtml(item.warehouse)}</div>`;
+                if (tpl.showLocation && item.location) infoHtml += `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">货位: ${escapeHtml(item.location)}</div>`;
+
+                printHtml += `
+                    <div style="width:${labelW}px;height:${labelH}px;border:1px solid #ccc;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;page-break-inside:avoid;">
+                        <div id="${qrId}"></div>
+                        <div style="font-size:${tpl.fontSize}px;text-align:center;line-height:1.4;margin-top:4px;">${infoHtml}</div>
+                    </div>
+                `;
+            });
+            printHtml += '</div>';
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>打印二维码标等</title>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+                    <style>
+                        @media print {
+                            body { margin: 0; padding: 0; }
+                            .no-print { display: none !important; }
+                        }
+                        body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #fff; margin: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="no-print" style="padding: 10px 0 20px; text-align: center;">
+                        <button onclick="window.print()" style="padding: 10px 24px; font-size: 14px; cursor: pointer; border: none; background: #00A3E0; color: #fff; border-radius: 6px;">
+                            <i class="fas fa-print"></i> 点击打印
+                        </button>
+                        <p style="color: #888; font-size: 12px; margin-top: 8px;">入 ${items.length} 个标签，请确认无误后点击打印</p>
+                    </div>
+                    <div id="printContainer">${printHtml}</div>
+                    <script>
+                        window.onload = function() {
+                            const items = ${JSON.stringify(items.map(i => ({ materialName: i.materialName, materialCode: i.materialCode, owner: i.owner, department: i.department, warehouse: i.warehouse, location: i.location })))};
+                            function getQRText(item) {
+                                const parts = [];
+                                if (item.materialName) parts.push('物料名称:' + item.materialName);
+                                if (item.materialCode) parts.push('物料编号:' + item.materialCode);
+                                if (item.owner) parts.push('所属人:' + item.owner);
+                                if (item.department) parts.push('所属部门"' + item.department);
+                                if (item.warehouse) parts.push('仓库:' + item.warehouse);
+                                if (item.location) parts.push('货位:' + item.location);
+                                return parts.join(' | ');
+                            }
+                            items.forEach((item, idx) => {
+                                const wrap = document.getElementById('pqr-' + idx);
+                                if (wrap && typeof QRCode !== 'undefined') {
+                                    new QRCode(wrap, { text: getQRText(item), width: ${tpl.qrSize}, height: ${tpl.qrSize}, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+                                }
+                            });
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            Toast.success(`已打开打印窗口，共 ${items.length} 个标签`);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function resetStockSearch() {
+            document.getElementById('stockName').value = '';
+            document.getElementById('stockCode').value = '';
+            document.getElementById('stockProject').value = '';
+            document.getElementById('stockWarehouse').value = '';
+            document.getElementById('stockCategory').value = '';
+            searchStock();
+        }
+
+        // 入库查询
+        function searchInbound() {
+            let data = Inventory.getAll();
+            
+            const material = document.getElementById('inboundMaterial').value.toLowerCase();
+            const project = document.getElementById('inboundProject').value.toLowerCase();
+            const warehouse = document.getElementById('inboundWarehouse').value;
+            const startDate = document.getElementById('inboundStartDate').value;
+            const endDate = document.getElementById('inboundEndDate').value;
+            
+            if (material) {
+                data = data.filter(item => 
+                    item.materialName.toLowerCase().includes(material) ||
+                    (item.materialCode && item.materialCode.toLowerCase().includes(material))
+                );
+            }
+            if (project) {
+                data = data.filter(item => 
+                    item.projectCode.toLowerCase().includes(project) ||
+                    item.poNumber.toLowerCase().includes(project)
+                );
+            }
+            if (warehouse) data = data.filter(item => item.warehouse === warehouse);
+            if (startDate) data = data.filter(item => new Date(item.inboundTime) >= new Date(startDate));
+            if (endDate) data = data.filter(item => new Date(item.inboundTime) <= new Date(endDate + ' 23:59:59'));
+            
+            const tbody = document.querySelector('#inboundTable tbody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="12" class="text-center" style="padding: 40px;">暂无数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td>${item.inboundNo}</td>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.projectCode}</td>
+                    <td>${item.pbu}</td>
+                    <td><span class="tag blue">${item.materialCategory}</span></td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit}</td>
+                    <td>${item.warehouse}</td>
+                    <td>${item.location}</td>
+                    <td>${DateUtils.format(item.inboundTime, 'YYYY-MM-DD HH:mm')}</td>
+                    <td>${item.applicant}</td>
+                </tr>
+            `).join('');
+        }
+
+        function resetInboundSearch() {
+            document.getElementById('inboundMaterial').value = '';
+            document.getElementById('inboundProject').value = '';
+            document.getElementById('inboundWarehouse').value = '';
+            document.getElementById('inboundStartDate').value = '';
+            document.getElementById('inboundEndDate').value = '';
+            searchInbound();
+        }
+
+        // 出库查询
+        function searchOutbound() {
+            const flows = Flows.getAll().filter(f => 
+                f.type === 'outbound_request' || f.type === 'outbound_scrap'
+            );
+            
+            const tbody = document.querySelector('#outboundTable tbody');
+            
+            if (flows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center" style="padding: 40px;">暂无数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = flows.map(flow => {
+                const items = flow.data.items || [flow.data];
+                const item = items[0];
+                return `
+                    <tr>
+                        <td>${flow.flowNo}</td>
+                        <td>${item?.materialName || '-'}</td>
+                        <td>${item?.materialCode || '-'}</td>
+                        <td>${item?.projectCode || flow.data.projectCode || '-'}</td>
+                        <td><span class="tag tag-${flow.type === 'outbound_scrap' ? 'orange' : 'blue'}">${flow.type === 'outbound_scrap' ? '报废' : '领用'}</span></td>
+                        <td>${item?.quantity || flow.data.quantity || '-'}</td>
+                        <td>${item?.unit || flow.data.unit || 'PCS'}</td>
+                        <td>${item?.warehouse || flow.data.warehouse || '-'}</td>
+                        <td>${DateUtils.format(flow.createTime, 'YYYY-MM-DD HH:mm')}</td>
+                        <td>${flow.creator}</td>
+                        <td><span class="status-tag ${flow.status}">${getStatusText(flow.status)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function resetOutboundSearch() {
+            document.getElementById('outboundMaterial').value = '';
+            document.getElementById('outboundProject').value = '';
+            document.getElementById('outboundWarehouse').value = '';
+            document.getElementById('outboundStartDate').value = '';
+            document.getElementById('outboundEndDate').value = '';
+            searchOutbound();
+        }
+
+        function getStatusText(status) {
+            const map = {
+                pending: '待处理',
+                approving: '审批中',
+                approved: '已通过',
+                rejected: '已驳回',
+                completed: '已完成'
+            };
+            return map[status] || status;
+        }
+
+        // 账龄查询
+        function searchAging() {
+            const threshold = parseInt(document.getElementById('agingThreshold').value);
+            const category = document.getElementById('agingCategory').value;
+            const warehouse = document.getElementById('agingWarehouse').value;
+            
+            let data = Inventory.getAll().filter(item => item.agingDays > threshold);
+            
+            if (category) data = data.filter(item => item.materialCategory === category);
+            if (warehouse) data = data.filter(item => item.warehouse === warehouse);
+            
+            // 按账龄降库 
+            data.sort((a, b) => b.agingDays - a.agingDays);
+            
+            const tbody = document.querySelector('#agingTable tbody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center" style="padding: 40px;">暂无超期数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.projectCode}</td>
+                    <td><span class="tag blue">${item.materialCategory}</span></td>
+                    <td>${DateUtils.format(item.inboundTime, 'YYYY-MM-DD')}</td>
+                    <td class="warning-cell">${item.agingDays}备</td>
+                    <td>${item.remainingStock}</td>
+                    <td>${item.warehouse}</td>
+                    <td>${item.location}</td>
+                    <td>${item.owner}</td>
+                </tr>
+            `).join('');
+        }
+
+        function resetAgingSearch() {
+            document.getElementById('agingThreshold').value = '90';
+            document.getElementById('agingCategory').value = '';
+            document.getElementById('agingWarehouse').value = '';
+            searchAging();
+        }
+
+        // 呆滞查询
+        function searchDormant() {
+            const threshold = parseInt(document.getElementById('dormantThreshold').value);
+            const category = document.getElementById('dormantCategory').value;
+            const warehouse = document.getElementById('dormantWarehouse').value;
+            
+            let data = Inventory.getAll().filter(item => item.dormantDays > threshold);
+            
+            if (category) data = data.filter(item => item.materialCategory === category);
+            if (warehouse) data = data.filter(item => item.warehouse === warehouse);
+            
+            // 按呆滞天数降库 
+            data.sort((a, b) => b.dormantDays - a.dormantDays);
+            
+            const tbody = document.querySelector('#dormantTable tbody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center" style="padding: 40px;">暂无呆滞数据</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(item => `
+                <tr>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.projectCode}</td>
+                    <td><span class="tag blue">${item.materialCategory}</span></td>
+                    <td>${DateUtils.format(item.inboundTime, 'YYYY-MM-DD')}</td>
+                    <td class="danger-cell">${item.dormantDays}备</td>
+                    <td>${item.remainingStock}</td>
+                    <td>${item.warehouse}</td>
+                    <td>${item.location}</td>
+                    <td>${item.owner}</td>
+                </tr>
+            `).join('');
+        }
+
+        function resetDormantSearch() {
+            document.getElementById('dormantThreshold').value = '180';
+            document.getElementById('dormantCategory').value = '';
+            document.getElementById('dormantWarehouse').value = '';
+            searchDormant();
+        }
+
+        // 导出数据
+        function exportData() {
+            Toast.success('数据导出成功');
+        }
+
+        // 侧边栏折叠 
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // 退出登录 
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 500);
+            });
+        });
+
+        // 初始区 
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadStockStats();
+            searchStock();
+        });
+    </script>
+</body>
+</html>

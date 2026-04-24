@@ -1,0 +1,2122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>myPrototype - 江森自控仓储与试制系统</title>
+    <!-- 引入 FontAwesome 图标库 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ================= 全局变量与基础设置 ================= */
+        :root {
+            --primary-blue: #003366; 
+            --accent-teal: #00A3E0;  
+            --bg-gray: #F5F7FA;      
+            --text-dark: #333333;    
+            --text-light: #666666;   
+            --danger-red: #E63946;   
+            --warning-orange: #F4A261; 
+            --success-green: #2A9D8F;  
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            --login-shadow: 0 8px 24px rgba(0, 51, 102, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        /* ================= 顶层屏幕视图控制 ================= */
+        .screen {
+            display: none;
+            height: 100%;
+            width: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* ================= 登录界面样式 ================= */
+        #login-screen.active {
+            align-items: center;
+            justify-content: center;
+            background-image: linear-gradient(135deg, #F5F7FA 0%, #E4EBF5 100%);
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 420px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--login-shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .login-header {
+            background-color: var(--primary-blue);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-header::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: white;
+            transform: skewY(-3deg);
+        }
+
+        .logo-icon {
+            font-size: 42px;
+            margin-bottom: 15px;
+            color: var(--accent-teal);
+        }
+
+        .login-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .login-form-wrapper {
+            padding: 40px 30px 30px;
+            background: white;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-group i.icon-left {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 1px solid #E0E0E0;
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--text-dark);
+            outline: none;
+            transition: all 0.3s;
+            background-color: #FAFAFA;
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent-teal);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.1);
+        }
+
+        .input-group input:focus + i.icon-left,
+        .input-group input:focus ~ i.icon-left {
+            color: var(--accent-teal);
+        }
+
+        .form-actions-login {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 13px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .forgot-pwd {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .error-msg {
+            color: var(--danger-red);
+            font-size: 13px;
+            margin-bottom: 15px;
+            text-align: center;
+            min-height: 18px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .error-msg.show {
+            opacity: 1;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-login:hover { background-color: #002244; }
+        .btn-login:disabled { background-color: #A0B2C4; cursor: not-allowed; }
+
+        .footer-text {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+        }
+
+        /* ================= 工作台主界面布局 ================= */
+        .sidebar {
+            width: 250px;
+            background-color: var(--primary-blue);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .logo-area {
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+        }
+
+        .menu {
+            padding: 20px 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .menu::-webkit-scrollbar { width: 6px; }
+        .menu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+        .menu-group { margin-bottom: 25px; }
+
+        .menu-title {
+            padding: 0 20px 10px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .menu-item {
+            padding: 12px 20px 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 14px;
+            border-left: 4px solid transparent;
+        }
+
+        .menu-item:hover { background-color: rgba(255,255,255,0.05); color: white; }
+        .menu-item.active { background-color: rgba(255,255,255,0.1); color: white; border-left: 4px solid var(--accent-teal); font-weight: 600; }
+        .menu-item i { width: 20px; text-align: center; }
+
+        .logout-btn {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .logout-btn:hover { color: white; }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .header {
+            height: 64px;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-gray);
+            padding: 8px 16px;
+            border-radius: 20px;
+            width: 350px;
+            border: 1px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .search-bar:focus-within { border-color: var(--accent-teal); background-color: white; }
+        .search-bar input { border: none; background: transparent; outline: none; margin-left: 10px; width: 100%; font-size: 14px; color: var(--text-dark); }
+
+        .user-actions { display: flex; align-items: center; gap: 25px; }
+        .notification { position: relative; cursor: pointer; color: var(--text-light); font-size: 20px; transition: color 0.3s; }
+        .notification:hover { color: var(--primary-blue); }
+        .badge { position: absolute; top: -6px; right: -8px; background-color: var(--danger-red); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: bold; border: 2px solid white; }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .avatar { width: 36px; height: 36px; background-color: var(--primary-blue); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .user-name { font-size: 14px; color: var(--text-dark); font-weight: 500; }
+
+        .dashboard { padding: 30px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .page-header { margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .page-header h2 { color: var(--text-dark); font-size: 24px; font-weight: 600; }
+        .page-header p { color: var(--text-light); font-size: 14px; margin-top: 5px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px 24px; border-radius: 8px; box-shadow: var(--card-shadow); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+        .stat-card.danger::before { background-color: var(--danger-red); }
+        .stat-card.warning::before { background-color: var(--warning-orange); }
+        .stat-card.primary::before { background-color: var(--primary-blue); }
+        .stat-card.success::before { background-color: var(--success-green); }
+        .stat-title { color: var(--text-light); font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+        .stat-title i { color: #ccc; }
+        .stat-value { font-size: 32px; font-weight: 700; color: var(--text-dark); display: flex; align-items: baseline; gap: 10px; }
+        .stat-value.danger-text { color: var(--danger-red); }
+        .stat-trend { font-size: 12px; padding: 2px 6px; border-radius: 4px; background: rgba(230, 57, 70, 0.1); color: var(--danger-red); display: inline-flex; align-items: center; gap: 4px; }
+
+        .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .card { background: white; border-radius: 8px; box-shadow: var(--card-shadow); display: flex; flex-direction: column; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #f0f0f0; }
+        .card-title { font-size: 16px; font-weight: 600; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+        .card-title i { color: var(--primary-blue); }
+        .card-action { color: var(--accent-teal); text-decoration: none; font-size: 13px; font-weight: 500; }
+        .card-action:hover { text-decoration: underline; }
+        .card-body { padding: 0 24px; flex: 1; }
+
+        .task-list { list-style: none; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #f5f5f5; }
+        .task-item:last-child { border-bottom: none; }
+        .task-info { display: flex; align-items: center; gap: 16px; }
+        .tag { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+        .tag.blue { background-color: #E3F2FD; color: #1976D2; }
+        .tag.purple { background-color: #F3E5F5; color: #7B1FA2; }
+        .tag.orange { background-color: #FFF3E0; color: #F57C00; }
+        .tag.green { background-color: #E8F5E9; color: #388E3C; }
+        .task-details { display: flex; flex-direction: column; gap: 4px; }
+        .task-title { color: var(--text-dark); font-size: 14px; font-weight: 500; }
+        .task-meta { color: #888; font-size: 12px; display: flex; gap: 12px; }
+
+        .btn-action { background: transparent; border: 1px solid var(--accent-teal); color: var(--accent-teal); padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; white-space: nowrap; }
+        .btn-action:hover { background: var(--accent-teal); color: white; }
+
+        .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 24px 0; }
+        .action-btn { background-color: var(--bg-gray); border: 1px solid transparent; padding: 20px 10px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; color: var(--text-dark); }
+        .action-btn i { font-size: 24px; color: var(--primary-blue); }
+        .action-btn span { font-size: 13px; font-weight: 500; }
+        .action-btn.highlight { background-color: #FFFDF0; border: 1px solid #FFE082; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1); }
+        .action-btn.highlight i { color: #F57F17; }
+        .action-btn:hover { transform: translateY(-2px); background-color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-color: #e0e0e0; }
+
+        /* 视图切换与表单相关样式 */
+        .view-content { display: none; animation: fadeIn 0.4s ease; }
+        .view-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .tabs { display: flex; border-bottom: 1px solid #e0e0e0; margin-bottom: 25px; }
+        .tab-btn { padding: 12px 24px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; color: var(--text-light); transition: all 0.3s; font-size: 15px; }
+        .tab-btn:hover { color: var(--primary-blue); }
+        .tab-btn.active { border-bottom-color: var(--primary-blue); color: var(--primary-blue); font-weight: 600; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px 25px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-group label { font-size: 13px; color: var(--text-dark); font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 6px; outline: none; font-size: 14px; color: var(--text-dark); transition: all 0.3s; background-color: #FAFAFA; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent-teal); background-color: white; box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.1); }
+        .form-group input[readonly] { background-color: #e9ecef; color: #666; cursor: not-allowed; }
+        
+        .form-actions { margin-top: 35px; display: flex; justify-content: flex-end; gap: 15px; border-top: 1px solid #f0f0f0; padding-top: 20px; }
+        .btn-submit { background: var(--primary-blue); color: white; border: none; padding: 10px 28px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.3s; display: flex; align-items: center; gap: 6px; }
+        .btn-submit:hover { background: #002244; }
+        .btn-reset { background: white; color: var(--text-dark); border: 1px solid #d9d9d9; padding: 10px 28px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.3s; display: flex; align-items: center; gap: 6px; }
+        .btn-reset:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+
+        .required { color: var(--danger-red); margin-left: 4px; }
+
+        .form-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #e0e0e0; }
+        .toolbar-title { font-size: 14px; font-weight: 600; color: var(--text-dark); border-left: 3px solid var(--accent-teal); padding-left: 8px; }
+        .toolbar-right { display: flex; gap: 12px; }
+        .btn-outline { background: white; color: var(--primary-blue); border: 1px solid var(--primary-blue); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.3s; display: flex; align-items: center; gap: 6px; }
+        .btn-outline:hover { background: var(--primary-blue); color: white; box-shadow: 0 4px 8px rgba(0, 51, 102, 0.15); }
+
+        /* 查询表格相关样式 */
+        .search-filters { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        .search-filters input, .search-filters select { padding: 8px 14px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 13px; outline: none; transition: all 0.3s; }
+        .search-filters input:focus, .search-filters select:focus { border-color: var(--accent-teal); box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.1); }
+        .table-container { width: 100%; overflow-x: auto; border: 1px solid #f0f0f0; border-radius: 8px; box-shadow: inset 0 0 4px rgba(0,0,0,0.02); }
+        .table-container::-webkit-scrollbar { height: 8px; }
+        .table-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+        .data-table th, .data-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        .data-table th { background-color: #F8FAFC; font-weight: 600; color: var(--text-dark); position: sticky; top: 0; z-index: 1; }
+        .data-table tbody tr:hover { background-color: #F0F7FF; }
+
+        /* 模态框审批弹窗样式 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(3px); opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.show { display: flex; opacity: 1; }
+        .modal-content { background: white; border-radius: 10px; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s ease; display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-overlay.show .modal-content { transform: translateY(0); }
+        .modal-header { padding: 20px 25px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: var(--primary-blue); color: white; border-radius: 10px 10px 0 0; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; margin: 0; }
+        .modal-close { cursor: pointer; color: rgba(255,255,255,0.7); transition: color 0.2s; }
+        .modal-close:hover { color: white; }
+        .modal-body { padding: 25px; overflow-y: auto; }
+        .info-panel { background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 1px solid #e9ecef; }
+        .info-panel p { color: var(--text-dark); margin: 0; }
+        .info-panel span { color: var(--text-light); }
+        .modal-footer { padding: 15px 25px; border-top: 1px solid #eee; display: flex; justify-content: space-between; background: #fafafa; border-radius: 0 0 10px 10px; }
+
+        @media (max-width: 1024px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .search-bar { width: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= 视图 1：登录界面 ================= -->
+    <div id="login-screen" class="screen active">
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fas fa-cubes logo-icon"></i>
+                <h1>myPrototype</h1>
+                <p>江森自控仓储与样机试制管理系统</p>
+            </div>
+            <div class="login-form-wrapper">
+                <form id="loginForm">
+                    <div class="input-group">
+                        <input type="text" id="username" placeholder="测试账号: admin / keeper / engineer" required autocomplete="off">
+                        <i class="fas fa-user icon-left"></i>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="password" placeholder="密码 (测试密码统一为: 123456)" required>
+                        <i class="fas fa-lock icon-left"></i>
+                    </div>
+                    <div class="form-actions-login">
+                        <label class="remember-me"><input type="checkbox" checked> 记住账号</label>
+                        <a href="#" class="forgot-pwd">忘记密码？</a>
+                    </div>
+                    <div id="errorMsg" class="error-msg"><i class="fas fa-exclamation-circle"></i> 用户名或密码错误</div>
+                    <button type="submit" class="btn-login" id="loginBtn"><span>登录系统</span><i class="fas fa-arrow-right"></i></button>
+                </form>
+                <div class="footer-text">&copy; 2026 Johnson Controls. All rights reserved.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 视图 2：工作台主界面 ================= -->
+    <div id="app-screen" class="screen">
+        <!-- 侧边导航栏 -->
+        <nav class="sidebar">
+            <div class="logo-area"><i class="fas fa-cubes"></i> <span>myPrototype</span></div>
+            <div class="menu">
+                <div class="menu-group">
+                    <div class="menu-title">仓库管理 Warehouse</div>
+                    <a class="menu-item active" id="menu-dashboard"><i class="fas fa-home"></i> <span>工作台看板</span></a>
+                    <a class="menu-item" id="menu-inbound"><i class="fas fa-sign-in-alt"></i> <span>入库</span></a>
+                    <a class="menu-item" id="menu-outbound"><i class="fas fa-sign-out-alt"></i> <span>出库</span></a>
+                    <a class="menu-item" id="menu-transfer"><i class="fas fa-exchange-alt"></i> <span>移库</span></a>
+                    <a class="menu-item" id="menu-query"><i class="fas fa-search"></i> <span>综合查询</span></a>
+                    <a class="menu-item"><i class="fas fa-clipboard-check"></i> <span>盘点</span></a>
+                    <a class="menu-item" id="menu-express"><i class="fas fa-truck"></i> <span>快递发运</span></a>
+                    <a class="menu-item"><i class="fas fa-trash-alt"></i> <span>报废处理</span></a>
+                    <a class="menu-item"><i class="fas fa-qrcode"></i> <span>二维码系统</span></a>
+                    <a class="menu-item"><i class="fas fa-cog"></i> <span>仓库配置</span></a>
+                </div>
+                <div class="menu-group">
+                    <div class="menu-title">样机试制 Prototyping</div>
+                    <a class="menu-item"><i class="fas fa-cogs"></i> <span>样机试制/改工</span></a>
+                    <a class="menu-item"><i class="fas fa-tools"></i> <span>工装制作</span></a>
+                </div>
+            </div>
+            <a href="#" id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+        </nav>
+
+        <!-- 主内容区域 -->
+        <main class="main-content">
+            <header class="header">
+                <div class="search-bar">
+                    <i class="fas fa-search" style="color: #999;"></i>
+                    <input type="text" placeholder="全局搜索单号、物料编码或样机...">
+                </div>
+                <div class="user-actions">
+                    <div class="notification" title="消息通知"><i class="fas fa-bell"></i><span class="badge">12</span></div>
+                    <div class="user-profile">
+                        <div class="avatar">JC</div>
+                        <span class="user-name">Johnson.Admin</span>
+                        <i class="fas fa-chevron-down" style="font-size: 12px; color: #999;"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 视图1：工作台 Dashboard 看板 -->
+            <div id="view-dashboard" class="view-content active">
+                <div class="dashboard">
+                    <div class="page-header">
+                        <div><h2>工作台</h2><p>欢迎回来，这里是您今天的仓储与试制流转概况。</p></div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card danger"><div class="stat-title">安全库存预警 (项) <i class="fas fa-exclamation-circle"></i></div><div class="stat-value danger-text">14 <span class="stat-trend"><i class="fas fa-arrow-up"></i> 2</span></div></div>
+                        <div class="stat-card warning"><div class="stat-title">呆滞/账龄超期 (SKU) <i class="fas fa-clock"></i></div><div class="stat-value">58</div></div>
+                        <div class="stat-card primary"><div class="stat-title">进行中样机试制 (单) <i class="fas fa-microchip"></i></div><div class="stat-value">26</div></div>
+                        <div class="stat-card success"><div class="stat-title">当前库存水位 <i class="fas fa-warehouse"></i></div><div class="stat-value">82%</div></div>
+                    </div>
+                <div class="content-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><i class="fas fa-clipboard-list"></i> 我的待办 (电子流)</div>
+                            <a href="#" class="card-action">查看全部流程</a>
+                        </div>
+                        <div class="card-body">
+                            <ul class="task-list" id="dashboard-task-list">
+                                <!-- JS动态渲染 -->
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div class="card-title"><i class="fas fa-bolt"></i> 快捷功能与核心工具</div></div>
+                        <div class="card-body">
+                            <div class="quick-actions">
+                                <button class="action-btn highlight"><i class="fas fa-dolly-flatbed"></i><span>多条移库</span></button>
+                                <button class="action-btn highlight"><i class="fas fa-qrcode"></i><span>二维码生成软件</span></button>
+                                <button class="action-btn"><i class="fas fa-search-dollar"></i><span>账龄周期查询</span></button>
+                                <button class="action-btn"><i class="fas fa-chart-line"></i><span>可视化大屏</span></button>
+                                <button class="action-btn"><i class="fas fa-box-open"></i><span>领用出库</span></button>
+                                <button class="action-btn"><i class="fas fa-hard-hat"></i><span>工程师入库</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <!-- 视图2：入库管理 -->
+            <div id="view-inbound" class="view-content">
+                <div class="dashboard">
+                    <div class="page-header"><div><h2>物料入库单</h2><p>请选择您的入库角色并填写相关物料信息。</p></div></div>
+                    <div class="card" style="padding: 10px 24px 30px;">
+                        <div class="tabs">
+                            <div class="tab-btn active" data-target="tab-keeper">仓管员入库</div>
+                            <div class="tab-btn" data-target="tab-engineer">工程师入库</div>
+                        </div>
+                        <!-- 仓管员入库表单 -->
+                        <div id="tab-keeper" class="tab-content active">
+                            <div class="form-toolbar">
+                                <div class="toolbar-title">单条录入</div>
+                                <div class="toolbar-right">
+                                    <button class="btn-outline btn-download"><i class="fas fa-download"></i> 导出模板</button>
+                                    <button class="btn-outline btn-import" onclick="document.getElementById('import-keeper').click()"><i class="fas fa-file-upload"></i> 批量导入</button>
+                                    <input type="file" id="import-keeper" style="display: none;" accept=".xlsx,.xls,.csv">
+                                </div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group"><label>物料名称 <span class="required">*</span></label><input type="text" placeholder="请输入物料名称" required></div>
+                                <div class="form-group"><label>物料编号 <span class="required" id="material-no-asterisk" style="display: none;">*</span></label><input type="text" id="material-no" placeholder="选择特定类别后必填" title="室外机、室内机、压缩机、控制箱必填"></div>
+                                <div class="form-group"><label>项目编号 <span class="required">*</span></label><input type="text" placeholder="请输入关联项目编号" required></div>
+                                <div class="form-group"><label>PBU <span class="required">*</span></label><select required><option value="">请选择PBU</option><option>PBU-A</option><option>PBU-B</option><option>PBU-C</option></select></div>
+                                <div class="form-group"><label>免3C <span class="required">*</span></label><select required><option value="">请选择</option><option>是 (Yes)</option><option>否 (No)</option></select></div>
+                                <div class="form-group"><label>物料类别 <span class="required">*</span></label><select id="material-category" required><option value="">请选择类别</option><option>室外机</option><option>室内机</option><option>压缩机</option><option>控制箱</option><option>工装</option><option>化学品</option><option>新物料</option><option>拆机物料</option><option>工具辅料</option></select></div>
+                                <div class="form-group"><label>所属人 <span class="required">*</span></label><input type="text" placeholder="请输入所属人" required></div>
+                                <div class="form-group"><label>所属部门 <span class="required">*</span></label><input type="text" placeholder="请输入所属部门" required></div>
+                                <div class="form-group"><label>PO号 <span class="required">*</span></label><input type="text" placeholder="请输入采购订单号" required></div>
+                                <div class="form-group"><label>供应商编号</label><input type="text" placeholder="请输入供应商编号 (选填)"></div>
+                                <div class="form-group"><label>数量 <span class="required">*</span></label><input type="number" placeholder="0" required></div>
+                                <div class="form-group"><label>单位 <span class="required">*</span></label><select required><option value="">请选择单位</option><option>PCS</option><option>KG</option><option>套</option><option>米</option><option>升</option></select></div>
+                                <div class="form-group"><label>仓库 <span class="required">*</span></label><select required><option value="">请选择仓库</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option><option>J</option><option>K</option><option>研发中心实验室仓</option><option>原材料一仓</option></select></div>
+                                <div class="form-group"><label>货位 <span class="required">*</span></label><input type="text" list="locations-list" placeholder="可输入或选择" required><datalist id="locations-list"><option value="A-0-0-0-0"></option><option value="B-1-0-1-0"></option></datalist></div>
+                                <div class="form-group"><label>单价 <span class="required">*</span></label><input type="number" placeholder="0.00" step="0.01" required></div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn-reset">重置信息</button>
+                                <button class="btn-submit" id="btn-submit-keeper"><i class="fas fa-check"></i> 提交入库</button>
+                            </div>
+                        </div>
+
+                        <!-- 工程师入库表单 -->
+                        <div id="tab-engineer" class="tab-content">
+                            <div class="form-toolbar">
+                                <div class="toolbar-title">单条录入</div>
+                                <div class="toolbar-right">
+                                    <button class="btn-outline btn-download"><i class="fas fa-download"></i> 导出模板</button>
+                                    <button class="btn-outline btn-import" onclick="document.getElementById('import-engineer').click()"><i class="fas fa-file-upload"></i> 批量导入</button>
+                                    <input type="file" id="import-engineer" style="display: none;" accept=".xlsx,.xls,.csv">
+                                </div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group"><label>物料名称 <span class="required">*</span></label><input type="text" placeholder="请输入物料名称" required></div>
+                                <div class="form-group"><label>项目编号 <span class="required">*</span></label><input type="text" placeholder="请输入关联项目编号" required></div>
+                                <div class="form-group"><label>PBU <span class="required">*</span></label><select required><option value="">请选择PBU</option><option>PBU-A</option><option>PBU-B</option><option>PBU-C</option></select></div>
+                                <div class="form-group"><label>免3C <span class="required">*</span></label><select required><option value="">请选择</option><option>是 (Yes)</option><option>否 (No)</option></select></div>
+                                <div class="form-group"><label>PO号</label><input type="text" list="po-list-engineer" placeholder="可输入或选择 (如: 样品)"><datalist id="po-list-engineer"><option value="样品"></option></datalist></div>
+                                <div class="form-group"><label>供应商编号</label><input type="text" placeholder="请输入供应商编码 (选填)"></div>
+                                <div class="form-group"><label>数量 <span class="required">*</span></label><input type="number" placeholder="0" required></div>
+                                <div class="form-group"><label>单位 <span class="required">*</span></label><select required><option value="">请选择单位</option><option>PCS</option><option>KG</option><option>套</option><option>米</option><option>升</option></select></div>
+                                <div class="form-group"><label>单价 <span class="required">*</span></label><input type="number" placeholder="0.00" step="0.01" required></div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn-reset">重置信息</button>
+                                <button class="btn-submit" id="btn-submit-engineer"><i class="fas fa-check"></i> 提交入库</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图3：出库管理 -->
+            <div id="view-outbound" class="view-content">
+                <div class="dashboard">
+                    <div class="page-header"><div><h2>物料出库单</h2><p>请选择出库类型并使用购物车模式流转审批单据。</p></div></div>
+                    <div class="card" style="padding: 10px 24px 30px;">
+                        <div class="tabs">
+                            <div class="tab-btn active" data-target="tab-requisition">领用出库</div>
+                            <div class="tab-btn" data-target="tab-scrap">报废出库</div>
+                        </div>
+
+                        <!-- 领用出库 -->
+                        <div id="tab-requisition" class="tab-content active">
+                            <div class="form-toolbar"><div class="toolbar-title">领用出库单 (购物车流转模式)</div></div>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div style="border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
+                                    <div style="padding: 15px; background: #fdfdfd; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px;">
+                                        <input type="text" id="req-search-input" placeholder="模糊查询: 物料名称或编号" style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; outline: none; font-size: 13px;">
+                                        <button class="btn-submit" id="btn-req-search" style="padding: 8px 16px; margin-top: 0; border-radius: 4px;"><i class="fas fa-search"></i> 查库存</button>
+                                    </div>
+                                    <div class="table-container" style="flex: 1; min-height: 200px; max-height: 300px; border: none; border-radius: 0;">
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>原入库数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th>
+                                                    <th style="position: sticky; right: 60px; background: #F8FAFC; box-shadow: -2px 0 5px rgba(0,0,0,0.05); width: 80px;">领用数量</th>
+                                                    <th style="position: sticky; right: 0; background: #F8FAFC; box-shadow: -2px 0 5px rgba(0,0,0,0.05); width: 60px; text-align: center;">操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="req-search-results"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div style="border: 1px solid #e0e0e0; border-radius: 8px; display: flex; flex-direction: column;">
+                                    <div style="padding: 15px; background: #fdfdfd; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: var(--primary-blue);"><i class="fas fa-shopping-cart"></i> 待领用清单 (<span id="req-cart-count">0</span>)</div>
+                                    <div class="table-container" style="flex: 1; min-height: 150px; max-height: 250px; border: none; border-radius: 0;">
+                                        <table class="data-table" style="font-size: 13px;">
+                                            <thead>
+                                                <tr>
+                                                    <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th><span style="color:var(--primary-blue);">领出数量</span></th><th>单位</th><th>入库时间</th><th>入库单号</th><th>领前余库</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th>
+                                                    <th style="position: sticky; right: 0; background: #F8FAFC; box-shadow: -2px 0 5px rgba(0,0,0,0.05); width: 50px; text-align: center;">移除</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="req-cart-body">
+                                                <tr><td colspan="21" style="text-align: center; color: #999; padding: 20px;">请从上方库存检索区添加需要领用的物料</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div style="padding: 15px; border-top: 1px solid #e0e0e0; background: #fafafa;">
+                                        <div class="form-grid" style="grid-template-columns: 2fr 1fr;">
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label>领料原因 / 用途 <span class="required">*</span></label>
+                                                <textarea id="req-reason" rows="2" placeholder="如：用于新项目研发测试使用..." required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; resize: none; font-size: 13px; outline: none; transition: border-color 0.3s;"></textarea>
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0; justify-content: flex-end;">
+                                                <label>审批经理 (系统自动匹配) <span class="required">*</span></label>
+                                                <input type="text" id="req-approver" readonly style="background: #e9ecef; color: #666; cursor: not-allowed; border: 1px solid #ccc; padding: 8px; border-radius: 4px; font-size: 13px; width: 100%;">
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                                            <button class="btn-submit" id="btn-submit-requisition" style="padding: 10px 30px; font-size: 14px;"><i class="fas fa-paper-plane"></i> 提交领用并流转审批</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 报废出库 -->
+                        <div id="tab-scrap" class="tab-content">
+                            <div class="form-toolbar"><div class="toolbar-title">报废出库单 (购物车流转模式)</div></div>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div style="border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
+                                    <div style="padding: 15px; background: #fdfdfd; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px;">
+                                        <input type="text" id="scrap-search-input" placeholder="模糊查询: 需报废的物料名称或编号" style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; outline: none; font-size: 13px;">
+                                        <button class="btn-submit" id="btn-scrap-search" style="padding: 8px 16px; margin-top: 0; border-radius: 4px;"><i class="fas fa-search"></i> 查库存</button>
+                                    </div>
+                                    <div class="table-container" style="flex: 1; min-height: 200px; max-height: 300px; border: none; border-radius: 0;">
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>原入库数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th>
+                                                    <th style="position: sticky; right: 60px; background: #F8FAFC; box-shadow: -2px 0 5px rgba(0,0,0,0.05); width: 80px;">报废数量</th>
+                                                    <th style="position: sticky; right: 0; background: #F8FAFC; box-shadow: -2px 0 5px rgba(0,0,0,0.05); width: 60px; text-align: center;">操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="scrap-search-results"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div style="border: 1px solid #e0e0e0; border-radius: 8px; display: flex; flex-direction: column;">
+                                    <div style="padding: 15px; background: #FFF3E0; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: var(--danger-red);"><i class="fas fa-trash-alt"></i> 待报废清单 (<span id="scrap-cart-count">0</span>)</div>
+                                    <div class="table-container" style="flex: 1; min-height: 150px; max-height: 250px; border: none; border-radius: 0;">
+                                        <table class="data-table" style="font-size: 13px;">
+                                            <thead>
+                                                <tr>
+                                                    <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th><span style="color:var(--danger-red);">报废数量</span></th><th>单位</th><th>入库时间</th><th>入库单号</th><th>报前余库</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th>
+                                                    <th style="position: sticky; right: 0; background: #F8FAFC; box-shadow: -2px 0 5px rgba(0,0,0,0.05); width: 50px; text-align: center;">移除</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="scrap-cart-body">
+                                                <tr><td colspan="21" style="text-align: center; color: #999; padding: 20px;">请从上方库存检索区添加需要报废的物料</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div style="padding: 15px; border-top: 1px solid #e0e0e0; background: #fafafa;">
+                                        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label>报废单号 <span class="required">*</span></label>
+                                                <input type="text" id="scrap-order-no" placeholder="请填写关联的报废单号" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; outline: none;">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label>上传报废凭证 <span class="required">*</span></label>
+                                                <input type="file" id="scrap-files" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" required style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; background: white; cursor: pointer;">
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 0;">
+                                                <label>审批经理 (系统自动匹配) <span class="required">*</span></label>
+                                                <input type="text" id="scrap-approver" readonly style="background: #e9ecef; color: #666; cursor: not-allowed; border: 1px solid #ccc; padding: 8px; border-radius: 4px; font-size: 13px; width: 100%;">
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                                            <button class="btn-submit" id="btn-submit-scrap" style="padding: 10px 30px; font-size: 14px; background: var(--danger-red);"><i class="fas fa-paper-plane"></i> 提交报废并流转审批</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图4：移库管理 -->
+            <div id="view-transfer" class="view-content">
+                <div class="dashboard">
+                    <div class="page-header"><div><h2>物料移库单</h2><p>请选择需要进行库位流转的物料并批量分配目标位置。</p></div></div>
+                    <div class="card" style="padding: 10px 24px 30px;">
+                        <div class="tabs"><div class="tab-btn active" data-target="tab-transfer-single">单条/批量移库</div></div>
+                        <div id="tab-transfer-single" class="tab-content active">
+                            <div class="form-toolbar">
+                                <div class="toolbar-title">物料移库单 (检索流转模式)</div>
+                                <div class="toolbar-right">
+                                    <button class="btn-outline btn-download"><i class="fas fa-download"></i> 导出移库模板</button>
+                                    <button class="btn-outline btn-import highlight" onclick="document.getElementById('import-transfer').click()"><i class="fas fa-file-upload"></i> 多条移库 (导入)</button>
+                                    <input type="file" id="import-transfer" style="display: none;" accept=".xlsx,.xls,.csv">
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                <div style="border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;">
+                                    <div style="padding: 15px; background: #fdfdfd; border-bottom: 1px solid #e0e0e0; display: flex; gap: 10px;">
+                                        <input type="text" id="transfer-search-input" placeholder="模糊查询: 需移库的物料名称或编号" style="flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; outline: none; font-size: 13px;">
+                                        <button class="btn-submit" id="btn-transfer-search" style="padding: 8px 16px; margin-top: 0; border-radius: 4px;"><i class="fas fa-search"></i> 查库存</button>
+                                    </div>
+                                    <div class="table-container" style="flex: 1; min-height: 200px; max-height: 300px; border: none; border-radius: 0;">
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>原入库数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>当前仓库</th><th>当前货位</th>
+                                                    <th style="position: sticky; right: 0; background: #F8FAFC; box-shadow: -2px 0 5px rgba(0,0,0,0.05); width: 60px; text-align: center;">操作</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="transfer-search-results"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div style="border: 1px solid #e0e0e0; border-radius: 8px; display: flex; flex-direction: column;">
+                                    <div style="padding: 15px; background: #fdfdfd; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: var(--warning-orange);"><i class="fas fa-exchange-alt"></i> 待移库清单 (<span id="transfer-cart-count">0</span>)</div>
+                                    <div class="table-container" style="flex: 1; min-height: 150px; max-height: 300px; border: none; border-radius: 0;">
+                                        <table class="data-table" style="font-size: 13px;">
+                                            <thead>
+                                                <tr>
+                                                    <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th><span style="color:var(--warning-orange);">原数量</span></th><th>单位</th><th>入库时间</th><th>入库单号</th><th>当前余库</th><th>账龄周期</th><th>呆滞周期</th><th>旧仓库</th><th>旧货位</th>
+                                                    <th style="position: sticky; right: 300px; background: #F8FAFC; box-shadow: -2px 0 5px rgba(0,0,0,0.05); width: 80px;"><span style="color:var(--warning-orange);">移库数量</span>*</th>
+                                                    <th style="position: sticky; right: 160px; background: #F8FAFC; width: 140px;">新仓库*</th>
+                                                    <th style="position: sticky; right: 50px; background: #F8FAFC; width: 110px;">新货位*</th>
+                                                    <th style="position: sticky; right: 0; background: #F8FAFC; width: 50px; text-align: center;">移除</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="transfer-cart-body">
+                                                <tr><td colspan="24" style="text-align: center; color: #999; padding: 20px;">请从上方库存检索区添加需要移库的物料</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div style="padding: 15px; border-top: 1px solid #e0e0e0; background: #fafafa; display: flex; justify-content: flex-end;">
+                                        <button class="btn-submit" id="btn-submit-transfer" style="padding: 10px 30px; font-size: 14px; background: var(--warning-orange);"><i class="fas fa-check-double"></i> 确认信息并提交移库</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图6：快递发运管理 -->
+            <div id="view-express" class="view-content">
+                <div class="dashboard">
+                    <div class="page-header">
+                        <div>
+                            <h2>快递发运单</h2>
+                            <p>填写物料外发信息，提交后将流转至仓管员处理发运。</p>
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 10px 24px 30px;">
+                        <div class="tabs">
+                            <div class="tab-btn active">工程师提单</div>
+                        </div>
+
+                        <div class="tab-content active">
+                            <div class="form-toolbar">
+                                <div class="toolbar-title">快递发运申请录入</div>
+                            </div>
+                            
+                            <div class="form-grid" id="express-form">
+                                <div class="form-group">
+                                    <label>外发日期</label>
+                                    <input type="text" id="exp-date" readonly title="系统自动生成">
+                                </div>
+                                <div class="form-group">
+                                    <label>PBU <span class="required">*</span></label>
+                                    <input type="text" id="exp-pbu" readonly title="根据登录账号自动匹配">
+                                </div>
+                                <div class="form-group">
+                                    <label>物料描述 <span class="required">*</span></label>
+                                    <input type="text" id="exp-desc" placeholder="请输入外发物料的详细描述" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>发运原因 <span class="required">*</span></label>
+                                    <input type="text" id="exp-reason" placeholder="请输入发运原因" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>发运包装 <span class="required">*</span></label>
+                                    <select id="exp-pack" required>
+                                        <option value="">请选择包装类型</option>
+                                        <option>纸箱</option>
+                                        <option>木箱</option>
+                                        <option>托盘</option>
+                                        <option>文件袋</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>收件人 <span class="required">*</span></label>
+                                    <input type="text" id="exp-receiver" placeholder="请输入收件人姓名" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>收件人电话 <span class="required">*</span></label>
+                                    <input type="text" id="exp-phone" placeholder="请输入11位手机号" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>收货地址 <span class="required">*</span></label>
+                                    <input type="text" id="exp-address" placeholder="请输入完整收货地址" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>运费项目号/成本中心 <span class="required">*</span></label>
+                                    <input type="text" id="exp-cost-center" placeholder="请输入成本中心代码" required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 1;">
+                                    <label>备注</label>
+                                    <input type="text" id="exp-remark" placeholder="其它特殊要求填写 (选填)">
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button class="btn-reset" id="btn-reset-exp">重置信息</button>
+                                <button class="btn-submit" id="btn-submit-exp" style="background: var(--success-green); color: white;"><i class="fas fa-paper-plane"></i> 提交流转仓管</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视图5：综合查询中心 -->
+            <div id="view-query" class="view-content">
+                <div class="dashboard">
+                    <div class="page-header"><div><h2>综合查询中心</h2><p>提供多维度的仓储与物料流转数据查询及导出功能。</p></div></div>
+                    <div class="card" style="padding: 10px 24px 30px;">
+                        <div class="tabs">
+                            <div class="tab-btn active" data-target="tab-query-outbound">出库查询</div>
+                            <div class="tab-btn" data-target="tab-query-inbound">入库查询</div>
+                            <div class="tab-btn" data-target="tab-query-inventory">库存查询</div>
+                            <div class="tab-btn" data-target="tab-query-ageing">账龄周期查询</div>
+                            <div class="tab-btn" data-target="tab-query-deadstock">呆滞周期查询</div>
+                        </div>
+
+                        <!-- 出库查询 面板 -->
+                        <div id="tab-query-outbound" class="tab-content active">
+                            <div class="search-filters">
+                                <input type="text" placeholder="物料名称 / 编号">
+                                <select><option value="">所有仓库</option><option>研发中心实验室仓</option><option>原材料一仓</option></select>
+                                <button class="btn-submit" style="padding: 8px 20px; margin-left: 10px; margin-top: 0;"><i class="fas fa-search"></i> 查询</button>
+                                <button class="btn-outline"><i class="fas fa-download"></i> 导出</button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead><tr><th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th></tr></thead>
+                                    <tbody id="tbody-outbound"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 入库查询 面板 -->
+                        <div id="tab-query-inbound" class="tab-content">
+                            <div class="search-filters">
+                                <input type="text" placeholder="物料名称 / 编号">
+                                <input type="text" placeholder="入库单号">
+                                <button class="btn-submit" style="padding: 8px 20px; margin-left: 10px; margin-top: 0;"><i class="fas fa-search"></i> 查询</button>
+                                <button class="btn-outline"><i class="fas fa-download"></i> 导出</button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead><tr><th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th></tr></thead>
+                                    <tbody id="tbody-inbound"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 库存查询 面板 -->
+                        <div id="tab-query-inventory" class="tab-content">
+                            <div class="search-filters">
+                                <input type="text" placeholder="全局搜索库存...">
+                                <select><option value="">所有物料类别</option><option>研发样件</option><option>原材料</option></select>
+                                <button class="btn-submit" style="padding: 8px 20px; margin-left: 10px; margin-top: 0;"><i class="fas fa-search"></i> 查询</button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead><tr><th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th></tr></thead>
+                                    <tbody id="tbody-inventory"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 账龄周期查询 面板 -->
+                        <div id="tab-query-ageing" class="tab-content">
+                            <div class="search-filters">
+                                <select><option>账龄 > 30天</option><option>账龄 > 60天</option><option>账龄 > 90天</option></select>
+                                <button class="btn-submit" style="padding: 8px 20px; margin-left: 10px; margin-top: 0;"><i class="fas fa-search"></i> 分析</button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead><tr><th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th></tr></thead>
+                                    <tbody><tr><td colspan="20" style="text-align: center; color: #999;">暂无数据</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 呆滞周期查询 面板 -->
+                        <div id="tab-query-deadstock" class="tab-content">
+                            <div class="search-filters">
+                                <select><option>呆滞 > 30天</option><option>呆滞 > 90天</option><option>呆滞 > 180天</option></select>
+                                <button class="btn-submit" style="background: var(--warning-orange); color: white; padding: 8px 20px; margin-top: 0;"><i class="fas fa-exclamation-triangle"></i> 预警查询</button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead><tr><th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th></tr></thead>
+                                    <tbody><tr><td colspan="20" style="text-align: center; color: #999;">暂无呆滞物料记录</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= 审批流转弹窗 (Modal) - 包含入库与发运 ================= -->
+    <div class="modal-overlay" id="approvalModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-main-title">工程师入库申请 - 仓管补充审核</h3>
+                <i class="fas fa-times modal-close" id="closeModal"></i>
+            </div>
+            <div class="modal-body">
+                <div class="info-panel" id="modal-info-panel">
+                    <!-- JS动态注入前序信息 -->
+                </div>
+                
+                <h4 style="font-size: 14px; margin-bottom: 15px; color: var(--primary-blue); border-left: 3px solid var(--accent-teal); padding-left: 8px;" id="modal-sub-title">仓管员需补充填写：</h4>
+                
+                <!-- 针对入库补充的表单 -->
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr;" id="modal-inbound-fields">
+                    <div class="form-group"><label>物料类别 <span class="required">*</span></label><select id="modal-category" required><option value="">请选择类别</option><option>室外机</option><option>室内机</option><option>压缩机</option><option>控制箱</option><option>工装</option><option>化学品</option><option>新物料</option><option>拆机物料</option><option>工具辅料</option></select></div>
+                    <div class="form-group"><label>物料编号 <span class="required" id="modal-matno-ast" style="display: none;">*</span></label><input type="text" id="modal-matno" placeholder="选择特定类别后必填"></div>
+                    <div class="form-group"><label>仓库 <span class="required">*</span></label><select id="modal-warehouse" required><option value="">请选择入库仓库</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option><option>J</option><option>K</option><option>研发中心实验室仓</option><option>原材料一仓</option></select></div>
+                    <div class="form-group"><label>货位 <span class="required">*</span></label><input type="text" id="modal-location" list="modal-loc-list" placeholder="可输入或选择" required><datalist id="modal-loc-list"><option value="A-0-0-0-0"></option><option value="B-1-0-1-0"></option></datalist></div>
+                </div>
+
+                <!-- 针对快递发运补充的表单 (默认隐藏) -->
+                <div class="form-grid" style="grid-template-columns: 1fr 1fr; display: none;" id="modal-express-fields">
+                    <div class="form-group"><label>快递单号 <span class="required">*</span></label><input type="text" id="mod-exp-tracking" placeholder="请输入物流/快递单号" required></div>
+                    <div class="form-group"><label>重量 (KG) <span class="required">*</span></label><input type="number" id="mod-exp-weight" placeholder="请输入包裹重量" required step="0.01"></div>
+                    <div class="form-group"><label>件数 <span class="required">*</span></label><input type="number" id="mod-exp-qty" placeholder="请输入包裹件数" required></div>
+                    <div class="form-group"><label>金额 (元) <span class="required">*</span></label><input type="number" id="mod-exp-amount" placeholder="请输入运费金额" required step="0.01"></div>
+                    
+                    <div style="grid-column: 1 / -1; margin-top: 10px; padding-top: 15px; border-top: 1px dashed #eee;">
+                        <h4 style="font-size: 13px; margin-bottom: 15px; color: var(--text-dark);">请上传相关附件：</h4>
+                        <div class="form-group" style="margin-bottom: 10px;"><label>1) 快递费用审批邮件 <span class="required">*</span></label><input type="file" id="mod-exp-file1" required style="padding: 6px; background: #fff; cursor: pointer;"></div>
+                        <div class="form-group" style="margin-bottom: 10px;"><label>2) 快递费用明细清单 <span class="required">*</span></label><input type="file" id="mod-exp-file2" required style="padding: 6px; background: #fff; cursor: pointer;"></div>
+                        <div class="form-group" style="margin-bottom: 10px;"><label>3) SAP YRP 会计模板 <span class="required">*</span></label><input type="file" id="mod-exp-file3" required style="padding: 6px; background: #fff; cursor: pointer;"></div>
+                        <div class="form-group" style="margin-bottom: 10px;"><label>4) 发票 <span class="required">*</span></label><input type="file" id="mod-exp-file4" required style="padding: 6px; background: #fff; cursor: pointer;"></div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn-reset" id="btn-reject-flow" style="border-color: var(--danger-red); color: var(--danger-red);"><i class="fas fa-undo"></i> 退回流程</button>
+                <button class="btn-submit" id="btn-approve-flow"><i class="fas fa-check-double"></i> 确认信息并完成</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 简单的交互脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // ================= 顶层屏幕视图逻辑 (登录/退出) =================
+            const loginScreen = document.getElementById('login-screen');
+            const appScreen = document.getElementById('app-screen');
+            const loginForm = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const errorMsg = document.getElementById('errorMsg');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            // 配置系统角色账号字典 (增加了 PBU 属性)
+            const mockUsers = { 
+                'admin': { password: '123456', name: '系统管理员', role: 'admin', avatar: 'AD', dept: 'IT管理部', manager: '王总 (总裁办)', pbu: 'PBU-A' },
+                'keeper': { password: '123456', name: '张仓管', role: 'keeper', avatar: '张', dept: '仓储物流部', manager: '赵主管 (仓储中心)', pbu: 'PBU-C' },
+                'engineer': { password: '123456', name: '李工', role: 'engineer', avatar: '李', dept: '研发中心', manager: '周经理 (研发二部)', pbu: 'PBU-A' }
+            };
+
+            // 清除错误提示
+            usernameInput.addEventListener('input', () => errorMsg.classList.remove('show'));
+            passwordInput.addEventListener('input', () => errorMsg.classList.remove('show'));
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = usernameInput.value.trim().toLowerCase(); 
+                const password = passwordInput.value.trim();
+
+                if (!username || !password) return;
+
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>验证中...</span>';
+
+                setTimeout(() => {
+                    const user = mockUsers[username];
+                    if (user && password === user.password) {
+                        window.currentUser = user;
+
+                        // 1. 更新顶部用户信息 UI
+                        const roleName = user.role === 'admin' ? '超级管理员' : (user.role === 'keeper' ? '仓管员' : '工程师');
+                        const roleColor = user.role === 'admin' ? 'var(--danger-red)' : (user.role === 'keeper' ? 'var(--success-green)' : 'var(--accent-teal)');
+                        
+                        document.querySelector('.user-name').innerHTML = `
+                            ${user.name} 
+                            <span style="font-size: 11px; background: ${roleColor}; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 5px;">${roleName}</span>
+                        `;
+                        document.querySelector('.avatar').innerText = user.avatar;
+
+                        // 2. 根据角色控制入库界面的 Tab 权限
+                        const keeperTabBtn = document.querySelector('.tab-btn[data-target="tab-keeper"]');
+                        const engineerTabBtn = document.querySelector('.tab-btn[data-target="tab-engineer"]');
+
+                        if (user.role === 'keeper') {
+                            keeperTabBtn.style.display = 'block';
+                            engineerTabBtn.style.display = 'none';
+                            keeperTabBtn.click();
+                        } else if (user.role === 'engineer') {
+                            keeperTabBtn.style.display = 'none';
+                            engineerTabBtn.style.display = 'block';
+                            engineerTabBtn.click();
+                        } else {
+                            keeperTabBtn.style.display = 'block';
+                            engineerTabBtn.style.display = 'block';
+                            keeperTabBtn.click();
+                        }
+
+                        // 自动预填表单默认信息
+                        const approverInputs = ['req-approver', 'scrap-approver'];
+                        approverInputs.forEach(id => {
+                            const el = document.getElementById(id);
+                            if(el) el.value = user.manager || '系统指派 (未匹配到上级)';
+                        });
+
+                        const expPbu = document.getElementById('exp-pbu');
+                        if (expPbu) expPbu.value = user.pbu || '未知PBU';
+
+                        const expDate = document.getElementById('exp-date');
+                        if (expDate) {
+                            const d = new Date();
+                            expDate.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                        }
+
+                        // 3. 登录成功：切换屏幕视图
+                        loginScreen.classList.remove('active');
+                        appScreen.classList.add('active');
+                        
+                        if (typeof switchView === 'function') {
+                            switchView(document.getElementById('view-dashboard'));
+                            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+                            document.getElementById('menu-dashboard').classList.add('active');
+                        }
+                        if (typeof renderDashboardTasks === 'function') renderDashboardTasks();
+                        
+                        resetLoginBtn();
+                        passwordInput.value = ''; 
+                    } else {
+                        resetLoginBtn();
+                        errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> 账号不存在或密码错误，请重试`;
+                        errorMsg.classList.add('show');
+                        loginForm.animate([
+                            { transform: 'translateX(0)' }, { transform: 'translateX(-5px)' },
+                            { transform: 'translateX(5px)' }, { transform: 'translateX(-5px)' },
+                            { transform: 'translateX(0)' }
+                        ], { duration: 300 });
+                    }
+                }, 800);
+            });
+
+            function resetLoginBtn() {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<span>登录系统</span> <i class="fas fa-arrow-right"></i>';
+            }
+
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                appScreen.classList.remove('active');
+                loginScreen.classList.add('active');
+            });
+
+            // ================= 内部视图切换逻辑 =================
+            const viewDashboard = document.getElementById('view-dashboard');
+            const viewInbound = document.getElementById('view-inbound');
+            const viewOutbound = document.getElementById('view-outbound');
+            const viewTransfer = document.getElementById('view-transfer');
+            const viewQuery = document.getElementById('view-query'); 
+            const viewExpress = document.getElementById('view-express'); 
+
+            function switchView(viewToShow) {
+                if (viewDashboard) viewDashboard.classList.remove('active');
+                if (viewInbound) viewInbound.classList.remove('active');
+                if (viewOutbound) viewOutbound.classList.remove('active');
+                if (viewTransfer) viewTransfer.classList.remove('active');
+                if (viewQuery) viewQuery.classList.remove('active');
+                if (viewExpress) viewExpress.classList.remove('active');
+                
+                if (viewToShow) viewToShow.classList.add('active');
+            }
+
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    menuItems.forEach(el => el.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.id === 'menu-inbound') switchView(viewInbound);
+                    else if (this.id === 'menu-dashboard') switchView(viewDashboard);
+                    else if (this.id === 'menu-outbound') switchView(viewOutbound);
+                    else if (this.id === 'menu-transfer') switchView(viewTransfer);
+                    else if (this.id === 'menu-query') switchView(viewQuery);
+                    else if (this.id === 'menu-express') switchView(viewExpress);
+                });
+            });
+
+            const tabBtns = document.querySelectorAll('.tab-btn[data-target]');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const currentView = this.closest('.view-content');
+                    if (!currentView) return; 
+
+                    const viewTabBtns = currentView.querySelectorAll('.tab-btn');
+                    const viewTabContents = currentView.querySelectorAll('.tab-content');
+
+                    viewTabBtns.forEach(t => t.classList.remove('active'));
+                    viewTabContents.forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    const targetId = this.getAttribute('data-target');
+                    if (targetId) {
+                        const targetPanel = document.getElementById(targetId);
+                        if (targetPanel) targetPanel.classList.add('active');
+                    }
+                });
+            });
+
+            // ================= 动态消息提示框 =================
+            function showToast(msg, bgColor = 'var(--success-green)') {
+                const toast = document.createElement('div');
+                toast.innerHTML = bgColor === 'var(--danger-red)' ? `<i class="fas fa-exclamation-circle"></i> ${msg}` : `<i class="fas fa-check-circle"></i> ${msg}`;
+                toast.style.cssText = `position:fixed; top:80px; left:50%; transform:translateX(-50%); background:${bgColor}; color:white; padding:12px 24px; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.15); z-index:9999; font-size:14px; display:flex; align-items:center; gap:8px; opacity:0; transition:opacity 0.3s;`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.style.opacity = '1', 10);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 300);
+                }, 2500);
+            }
+
+            // ================= 模拟数据联动基础表结构 =================
+            const tableColumns = ["物料名称", "物料编号", "申请人", "项目编号", "PBU", "免3C", "物料类别", "所属人", "所属部门", "PO号", "供应商编号", "数量", "单位", "入库时间", "入库单号", "剩余库存", "账龄周期", "呆滞周期", "仓库", "货位"];
+            const inboundRecords = [];
+            const outboundRecords = [];
+            const reqInventory = [
+                { "物料名称": "高压冷凝器组件", "物料编号": "MAT-10023", "申请人": "张建国", "项目编号": "PRJ-JC-26A", "PBU": "PBU-B", "免3C": "是", "物料类别": "原材料", "所属人": "李梅", "所属部门": "生产一部", "PO号": "PO-20260401", "供应商编号": "SUP-0082", "数量": "150", "单位": "PCS", "入库时间": "2026-03-15 10:00", "入库单号": "IN-260315-01", "剩余库存": 150, "账龄周期": "21天", "呆滞周期": "0天", "仓库": "原材料一仓", "货位": "A-02-15" },
+                { "物料名称": "智能温控面板", "物料编号": "MAT-10088", "申请人": "王洋", "项目编号": "PRJ-JC-26B", "PBU": "PBU-A", "免3C": "否", "物料类别": "研发样件", "所属人": "赵工", "所属部门": "研发二部", "PO号": "PO-20260405", "供应商编号": "SUP-0015", "数量": "5", "单位": "套", "入库时间": "2026-01-20 14:30", "入库单号": "IN-260120-05", "剩余库存": 5, "账龄周期": "76天", "呆滞周期": "45天", "仓库": "研发中心实验室仓", "货位": "LAB-C-08" },
+                { "物料名称": "压缩机密封圈", "物料编号": "MAT-20011", "申请人": "陈亮", "项目编号": "PRJ-JC-26C", "PBU": "PBU-C", "免3C": "是", "物料类别": "工具辅料", "所属人": "陈亮", "所属部门": "装配车间", "PO号": "PO-20260501", "供应商编号": "SUP-0112", "数量": "500", "单位": "PCS", "入库时间": "2026-04-01 09:00", "入库单号": "IN-260401-02", "剩余库存": 500, "账龄周期": "5天", "呆滞周期": "0天", "仓库": "原材料一仓", "货位": "B-01-05" }
+            ];
+
+            function renderTables() {
+                const renderTbody = (id, data) => {
+                    const tbody = document.getElementById(id);
+                    if(!tbody) return;
+                    if(data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="20" style="text-align: center; color: #999; padding: 30px;"><i class="fas fa-inbox fa-2x" style="display:block; margin-bottom: 10px; color: #e0e0e0;"></i>暂无数据记录</td></tr>`;
+                        return;
+                    }
+                    tbody.innerHTML = data.map(record => 
+                        '<tr>' + tableColumns.map(col => `<td>${record[col] || '-'}</td>`).join('') + '</tr>'
+                    ).join('');
+                };
+                renderTbody('tbody-inbound', [...inboundRecords, ...reqInventory]); 
+                renderTbody('tbody-outbound', outboundRecords);
+                renderTbody('tbody-inventory', [...inboundRecords, ...reqInventory]);
+            }
+            renderTables();
+
+            // ================= 入库表单提交 =================
+            function handleFormSubmit(tabId, dataArray, buttonId, successMsg) {
+                const btn = document.getElementById(buttonId);
+                if(!btn) return;
+                
+                btn.addEventListener('click', () => {
+                    const container = document.getElementById(tabId);
+                    const groups = container.querySelectorAll('.form-group');
+                    
+                    let isValid = true;
+                    groups.forEach(group => {
+                        const input = group.querySelector('input:not([type="file"]), select');
+                        if (input && input.hasAttribute('required') && !input.value.trim()) {
+                            isValid = false;
+                            input.style.borderColor = 'var(--danger-red)';
+                        } else if (input) { input.style.borderColor = ''; }
+                    });
+
+                    if (!isValid) { showToast('请填写所有带红星 (*) 的必填项！', 'var(--danger-red)'); return; }
+
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+                    btn.disabled = true;
+
+                    setTimeout(() => {
+                        const record = {};
+                        groups.forEach(group => {
+                            let labelText = group.querySelector('label')?.innerText.replace('*', '').trim().split(' ')[0];
+                            const input = group.querySelector('input:not([type="file"]), select');
+                            if(labelText && input) record[labelText] = input.value || '-';
+                        });
+
+                        record["申请人"] = window.currentUser ? window.currentUser.name : '未知账号';
+                        if(!record["所属人"] || record["所属人"] === '-') record["所属人"] = window.currentUser ? window.currentUser.name : '未知账号';
+                        if(!record["所属部门"] || record["所属部门"] === '-') record["所属部门"] = window.currentUser ? window.currentUser.dept : '未知部门';
+                        
+                        if(!record["入库时间"] || record["入库时间"] === '-') {
+                            const d = new Date();
+                            record["入库时间"] = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                        }
+                        if(!record["入库单号"] || record["入库单号"] === '-') record["入库单号"] = 'SYS-' + Date.now().toString().slice(-6);
+                        if(!record["剩余库存"] || record["剩余库存"] === '-') record["剩余库存"] = record["数量"] || '0';
+                        if(!record["账龄周期"] || record["账龄周期"] === '-') record["账龄周期"] = '0天';
+                        if(!record["呆滞周期"] || record["呆滞周期"] === '-') record["呆滞周期"] = '0天';
+
+                        if (tabId === 'tab-engineer') {
+                            record["workflowId"] = 'FLOW-' + Date.now(); 
+                            record["workflowStatus"] = '待仓管审批补充';
+                            pendingWorkflows.push(record);
+                            renderDashboardTasks(); 
+                            successMsg = '提交成功！流程已流转至仓管员。';
+                        } else {
+                            dataArray.unshift(record);
+                            renderTables();
+                        }
+
+                        container.querySelectorAll('input:not([type="file"]), select').forEach(el => {
+                            el.value = ''; el.style.borderColor = ''; 
+                        });
+
+                        if(tabId === 'tab-keeper') {
+                            const matNoInput = document.getElementById('material-no');
+                            const matNoAst = document.getElementById('material-no-asterisk');
+                            if(matNoInput) { matNoInput.removeAttribute('required'); matNoInput.placeholder = "选择特定类别后必填"; }
+                            if(matNoAst) matNoAst.style.display = 'none';
+                        }
+                        
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        showToast(successMsg);
+                    }, 800);
+                });
+            }
+
+            handleFormSubmit('tab-keeper', inboundRecords, 'btn-submit-keeper', '仓管员入库成功！已同步至综合查询中心。');
+            handleFormSubmit('tab-engineer', inboundRecords, 'btn-submit-engineer', '工程师入库成功！已同步至综合查询中心。');
+
+            // 物料联动
+            const categorySelect = document.getElementById('material-category');
+            const materialNoInput = document.getElementById('material-no');
+            const materialNoAsterisk = document.getElementById('material-no-asterisk');
+
+            if (categorySelect && materialNoInput && materialNoAsterisk) {
+                categorySelect.addEventListener('change', function() {
+                    if (['室外机', '室内机', '压缩机', '控制箱'].includes(this.value)) {
+                        materialNoInput.setAttribute('required', 'required');
+                        materialNoAsterisk.style.display = 'inline';
+                        materialNoInput.placeholder = "请输入物料编号 (必填)";
+                    } else {
+                        materialNoInput.removeAttribute('required');
+                        materialNoAsterisk.style.display = 'none';
+                        materialNoInput.placeholder = "请输入物料编号 (选填)";
+                        materialNoInput.style.borderColor = ''; 
+                    }
+                });
+            }
+
+            // ================= 快递发运提交流转逻辑 =================
+            const btnSubmitExp = document.getElementById('btn-submit-exp');
+            const btnResetExp = document.getElementById('btn-reset-exp');
+            
+            if (btnSubmitExp) {
+                btnSubmitExp.addEventListener('click', () => {
+                    const formContainer = document.getElementById('express-form');
+                    const requiredInputs = formContainer.querySelectorAll('input[required], select[required]');
+                    let isValid = true;
+                    
+                    const phoneInput = document.getElementById('exp-phone');
+                    
+                    requiredInputs.forEach(input => {
+                        if (!input.value.trim()) {
+                            isValid = false;
+                            input.style.borderColor = 'var(--danger-red)';
+                        } else {
+                            input.style.borderColor = '#ccc';
+                        }
+                    });
+
+                    if (phoneInput && phoneInput.value.trim()) {
+                        if (!/^1[3-9]\d{9}$/.test(phoneInput.value.trim())) {
+                            isValid = false;
+                            phoneInput.style.borderColor = 'var(--danger-red)';
+                            showToast('请输入正确的11位手机号！', 'var(--danger-red)');
+                            return;
+                        }
+                    }
+
+                    if (!isValid) {
+                        showToast('请完整正确填写带红星的必填信息！', 'var(--danger-red)');
+                        return;
+                    }
+
+                    const originalText = btnSubmitExp.innerHTML;
+                    btnSubmitExp.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交流转中...';
+                    btnSubmitExp.disabled = true;
+
+                    setTimeout(() => {
+                        const record = {
+                            workflowId: 'EXP-' + Date.now().toString().slice(-6),
+                            '物料名称': document.getElementById('exp-desc').value, 
+                            '申请人': window.currentUser ? window.currentUser.name : '未知',
+                            '所属部门': window.currentUser ? window.currentUser.dept : '未知',
+                            '收件人': document.getElementById('exp-receiver').value,
+                            '发运原因': document.getElementById('exp-reason').value,
+                            workflowStatus: '待仓管发运'
+                        };
+                        
+                        pendingWorkflows.push(record);
+                        renderDashboardTasks(); 
+
+                        requiredInputs.forEach(input => input.value = '');
+                        document.getElementById('exp-remark').value = '';
+                        document.getElementById('exp-pbu').value = window.currentUser ? window.currentUser.pbu : 'PBU-A';
+                        
+                        btnSubmitExp.innerHTML = originalText;
+                        btnSubmitExp.disabled = false;
+                        
+                        showToast('快递发运申请已成功流转至仓管员！');
+                    }, 800);
+                });
+            }
+            
+            if(btnResetExp) {
+                btnResetExp.addEventListener('click', () => {
+                    const formContainer = document.getElementById('express-form');
+                    formContainer.querySelectorAll('input:not([readonly]), select').forEach(el => {
+                        el.value = ''; el.style.borderColor = '';
+                    });
+                });
+            }
+
+            // ================= 待办流转系统与 Modal 审批逻辑 =================
+            let pendingWorkflows = []; 
+            let currentApprovalRecord = null; 
+
+            const staticTasks = [
+                { tagClass: 'purple', tagText: '仓储盘点', title: 'Q1仓库 手持终端盘点差异确认单', meta: '<span><i class="far fa-user"></i> 仓管组</span><span style="color: var(--danger-red);"><i class="far fa-clock"></i> 严重超时</span>', actionText: '核对差异' }
+            ];
+
+            function renderDashboardTasks() {
+                const taskList = document.getElementById('dashboard-task-list');
+                if(!taskList) return;
+                
+                let html = '';
+
+                if (window.currentUser && (window.currentUser.role === 'keeper' || window.currentUser.role === 'admin' || window.currentUser.role === 'engineer')) {
+                    pendingWorkflows.forEach(workflow => {
+                        let isReq = workflow.workflowId && workflow.workflowId.startsWith('REQ');
+                        let isScr = workflow.workflowId && workflow.workflowId.startsWith('SCR');
+                        let isExp = workflow.workflowId && workflow.workflowId.startsWith('EXP');
+                        
+                        let tagColor = isExp ? 'green' : (isReq ? 'purple' : (isScr ? 'orange' : 'blue'));
+                        let tagText = isExp ? '快递发运处理' : (isReq ? '领用出库审批' : (isScr ? '报废出库审批' : '入库补充审核'));
+                        let actionText = isExp ? '处理发运' : ((isReq || isScr) ? '经理审批' : '进入审批');
+                        let borderColor = isExp ? 'var(--success-green)' : (isScr ? 'var(--danger-red)' : (isReq ? 'var(--warning-orange)' : 'var(--accent-teal)'));
+
+                        html += `
+                            <li class="task-item" style="background: #fdfdfd; border-left: 4px solid ${borderColor}; padding-left: 15px;">
+                                <div class="task-info">
+                                    <span class="tag ${tagColor}">${tagText}</span>
+                                    <div class="task-details">
+                                        <div class="task-title">流程单: ${workflow.workflowId} - ${workflow['物料名称']}</div>
+                                        <div class="task-meta">
+                                            <span><i class="far fa-user"></i> 申请人: ${workflow['申请人']} (${workflow['所属部门']})</span>
+                                            <span style="color:var(--accent-teal);"><i class="far fa-clock"></i> ${workflow.workflowStatus || '待处理'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn-action btn-open-modal" data-id="${workflow.workflowId}">${actionText}</button>
+                            </li>
+                        `;
+                    });
+                }
+
+                staticTasks.forEach(task => {
+                    html += `
+                        <li class="task-item">
+                            <div class="task-info">
+                                <span class="tag ${task.tagClass}">${task.tagText}</span>
+                                <div class="task-details">
+                                    <div class="task-title">${task.title}</div>
+                                    <div class="task-meta">${task.meta}</div>
+                                </div>
+                            </div>
+                            <button class="btn-action">${task.actionText}</button>
+                        </li>
+                    `;
+                });
+
+                taskList.innerHTML = html;
+
+                document.querySelectorAll('.btn-open-modal').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        const id = this.getAttribute('data-id');
+                        currentApprovalRecord = pendingWorkflows.find(w => w.workflowId === id);
+                        
+                        if (currentApprovalRecord) {
+                            if (id.startsWith('REQ') || id.startsWith('SCR')) {
+                                showToast('模拟流转：此出库/报废单已通知对应经理审批中。', 'var(--warning-orange)');
+                                return;
+                            }
+                            openApprovalModal(currentApprovalRecord);
+                        }
+                    });
+                });
+            }
+
+            renderDashboardTasks();
+
+            const modal = document.getElementById('approvalModal');
+            const btnCloseModal = document.getElementById('closeModal');
+            const btnReject = document.getElementById('btn-reject-flow');
+            const btnApprove = document.getElementById('btn-approve-flow');
+            const modalTitle = document.getElementById('modal-main-title');
+            const modalSubTitle = document.getElementById('modal-sub-title');
+            const modalInfoPanel = document.getElementById('modal-info-panel');
+            
+            const modalInboundFields = document.getElementById('modal-inbound-fields');
+            const modalExpressFields = document.getElementById('modal-express-fields');
+
+            const modalCategory = document.getElementById('modal-category');
+            const modalMatno = document.getElementById('modal-matno');
+            const modalMatnoAst = document.getElementById('modal-matno-ast');
+            const modalWarehouse = document.getElementById('modal-warehouse');
+            const modalLocation = document.getElementById('modal-location');
+            
+            const modExpTracking = document.getElementById('mod-exp-tracking');
+            const modExpWeight = document.getElementById('mod-exp-weight');
+            const modExpQty = document.getElementById('mod-exp-qty');
+            const modExpAmount = document.getElementById('mod-exp-amount');
+            const modExpFiles = [
+                document.getElementById('mod-exp-file1'),
+                document.getElementById('mod-exp-file2'),
+                document.getElementById('mod-exp-file3'),
+                document.getElementById('mod-exp-file4')
+            ];
+
+            function openApprovalModal(record) {
+                const isExp = record.workflowId && record.workflowId.startsWith('EXP');
+                
+                if (isExp) {
+                    modalTitle.innerText = "快递发运申请 - 仓管发运补充";
+                    modalSubTitle.innerText = "仓管员需补充快递信息并上传凭证：";
+                    modalInfoPanel.innerHTML = `
+                        <p><span>物料描述：</span>${record['物料名称']}</p>
+                        <p><span>申请人：</span>${record['申请人']}</p>
+                        <p><span>收件人：</span><strong style="color:var(--primary-blue)">${record['收件人']}</strong></p>
+                        <p><span>发运原因：</span>${record['发运原因']}</p>
+                    `;
+                    modalInboundFields.style.display = 'none';
+                    modalExpressFields.style.display = 'grid';
+                    
+                    [modExpTracking, modExpWeight, modExpQty, modExpAmount, ...modExpFiles].forEach(el => {
+                        if(el) { el.value = ''; el.style.borderColor = ''; }
+                    });
+                } else {
+                    modalTitle.innerText = "工程师入库申请 - 仓管补充审核";
+                    modalSubTitle.innerText = "仓管员需补充入库库位：";
+                    modalInfoPanel.innerHTML = `
+                        <p><span>物料名称：</span>${record['物料名称']}</p>
+                        <p><span>申请人：</span>${record['申请人']}</p>
+                        <p><span>数量/单位：</span><strong style="color:var(--primary-blue)">${record['数量']} ${record['单位']}</strong></p>
+                        <p><span>项目编号：</span>${record['项目编号']}</p>
+                        <p><span>PO单号：</span>${record['PO号']}</p>
+                        <p><span>入库单号：</span>${record['入库单号']}</p>
+                    `;
+                    modalInboundFields.style.display = 'grid';
+                    modalExpressFields.style.display = 'none';
+                    
+                    modalCategory.value = ''; modalMatno.value = ''; modalMatno.removeAttribute('required');
+                    modalMatno.style.borderColor = ''; modalMatnoAst.style.display = 'none';
+                    modalWarehouse.value = ''; modalLocation.value = '';
+                }
+
+                modal.classList.add('show');
+            }
+
+            btnCloseModal.addEventListener('click', () => { modal.classList.remove('show'); });
+
+            btnReject.addEventListener('click', () => {
+                const originalText = btnReject.innerHTML;
+                btnReject.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+                setTimeout(() => {
+                    pendingWorkflows = pendingWorkflows.filter(w => w.workflowId !== currentApprovalRecord.workflowId);
+                    renderDashboardTasks();
+                    modal.classList.remove('show');
+                    btnReject.innerHTML = originalText;
+                    showToast('已将流程退回给申请人！', 'var(--warning-orange)');
+                }, 600);
+            });
+
+            btnApprove.addEventListener('click', () => {
+                let isModalValid = true;
+                const isExp = currentApprovalRecord.workflowId.startsWith('EXP');
+
+                if (isExp) {
+                    [modExpTracking, modExpWeight, modExpQty, modExpAmount, ...modExpFiles].forEach(input => {
+                        if(!input.value.trim()) { isModalValid = false; input.style.borderColor = 'var(--danger-red)'; }
+                        else { input.style.borderColor = ''; }
+                    });
+                } else {
+                    [modalCategory, modalWarehouse, modalLocation].forEach(input => {
+                        if(!input.value.trim()) { isModalValid = false; input.style.borderColor = 'var(--danger-red)'; }
+                        else { input.style.borderColor = ''; }
+                    });
+                    if(modalMatno.hasAttribute('required') && !modalMatno.value.trim()) {
+                        isModalValid = false; modalMatno.style.borderColor = 'var(--danger-red)';
+                    } else { modalMatno.style.borderColor = ''; }
+                }
+
+                if(!isModalValid) {
+                    showToast('请补充完整的必填信息及附件！', 'var(--danger-red)');
+                    return;
+                }
+
+                const originalText = btnApprove.innerHTML;
+                btnApprove.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 流程确认中...';
+
+                setTimeout(() => {
+                    if (isExp) {
+                        pendingWorkflows = pendingWorkflows.filter(w => w !== currentApprovalRecord);
+                        showToast('发运操作完成：快递单号与凭证已归档！');
+                    } else {
+                        currentApprovalRecord['物料类别'] = modalCategory.value;
+                        currentApprovalRecord['物料编号'] = modalMatno.value || '-';
+                        currentApprovalRecord['仓库'] = modalWarehouse.value;
+                        currentApprovalRecord['货位'] = modalLocation.value;
+                        delete currentApprovalRecord.workflowId; delete currentApprovalRecord.workflowStatus;
+                        inboundRecords.unshift(currentApprovalRecord);
+                        pendingWorkflows = pendingWorkflows.filter(w => w !== currentApprovalRecord);
+                        renderTables();
+                        showToast('流程结束：信息已补充并成功入库！');
+                    }
+                    
+                    renderDashboardTasks();
+                    modal.classList.remove('show');
+                    btnApprove.innerHTML = originalText;
+                }, 800);
+            });
+
+            // ================= 领用出库 (购物车流转模式) =================
+            let reqCart = [];
+
+            const reqSearchInput = document.getElementById('req-search-input');
+            const btnReqSearch = document.getElementById('btn-req-search');
+            const reqSearchResults = document.getElementById('req-search-results');
+            const reqCartBody = document.getElementById('req-cart-body');
+            const reqCartCount = document.getElementById('req-cart-count');
+            const reqReason = document.getElementById('req-reason');
+            const btnSubmitReq = document.getElementById('btn-submit-requisition');
+
+            function renderReqSearch(query = '') {
+                if(!reqSearchResults) return;
+                const filtered = reqInventory.filter(item => 
+                    item["物料名称"].includes(query) || item["物料编号"].toLowerCase().includes(query.toLowerCase())
+                );
+                
+                if (filtered.length === 0) {
+                    reqSearchResults.innerHTML = '<tr><td colspan="22" style="text-align:center;color:#999;padding:20px;">未搜索到匹配的物料库存</td></tr>';
+                    return;
+                }
+
+                reqSearchResults.innerHTML = filtered.map((item, index) => `
+                    <tr>
+                        ${tableColumns.map(col => {
+                            let val = item[col] || '-';
+                            if (col === '剩余库存') { val = `<span style="color:var(--success-green);font-weight:600;">${val}</span>`; }
+                            return `<td>${val}</td>`;
+                        }).join('')}
+                        <td style="position: sticky; right: 60px; background: #fff; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                            <input type="number" id="qty-${index}" min="1" max="${item['剩余库存']}" value="1" style="width: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; outline:none;">
+                        </td>
+                        <td style="position: sticky; right: 0; background: #fff; text-align:center; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                            <button class="btn-outline" onclick="window.addToReqCart(${index})" style="padding: 4px 10px; font-size: 12px; margin:0 auto;"><i class="fas fa-plus"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            window.addToReqCart = function(index) {
+                const item = reqInventory[index];
+                const qtyInput = document.getElementById(`qty-${index}`);
+                const qty = parseInt(qtyInput.value);
+
+                if (isNaN(qty) || qty <= 0 || qty > item['剩余库存']) {
+                    showToast('库存不足或输入数量无效！', 'var(--danger-red)');
+                    return;
+                }
+
+                const existing = reqCart.find(c => c["入库单号"] === item["入库单号"]);
+                if (existing) {
+                    if (existing.reqQty + qty > item['剩余库存']) {
+                        showToast(`合并失败：超出现有可用库存总上限 (${item['剩余库存']})！`, 'var(--danger-red)');
+                        return;
+                    }
+                    existing.reqQty += qty;
+                } else {
+                    reqCart.push({ ...item, reqQty: qty });
+                }
+                
+                showToast(`已添加 ${qty} ${item["单位"]} [${item["物料名称"]}] 到领用购物车`);
+                renderReqCart(); 
+            };
+
+            window.removeFromReqCart = function(index) {
+                reqCart.splice(index, 1);
+                renderReqCart();
+            };
+
+            function renderReqCart() {
+                if(!reqCartCount) return;
+                reqCartCount.innerText = reqCart.length;
+                if (reqCart.length === 0) {
+                    reqCartBody.innerHTML = '<tr><td colspan="21" style="text-align: center; color: #999; padding: 20px;">请从上方库存检索区添加需要领用的物料</td></tr>';
+                    return;
+                }
+
+                reqCartBody.innerHTML = reqCart.map((item, index) => `
+                    <tr>
+                        ${tableColumns.map(col => {
+                            let val = item[col] || '-';
+                            if (col === '数量') { val = `<strong style="color:var(--primary-blue)">${item.reqQty}</strong>`; }
+                            return `<td>${val}</td>`;
+                        }).join('')}
+                        <td style="position: sticky; right: 0; background: #fff; text-align:center; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                            <i class="fas fa-trash-alt" style="color:var(--danger-red); cursor:pointer; font-size: 14px;" onclick="window.removeFromReqCart(${index})" title="移除"></i>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            if(btnReqSearch) {
+                btnReqSearch.addEventListener('click', () => renderReqSearch(reqSearchInput.value.trim()));
+                reqSearchInput.addEventListener('keyup', (e) => {
+                    if(e.key === 'Enter') renderReqSearch(reqSearchInput.value.trim());
+                });
+                renderReqSearch(); 
+                renderReqCart();   
+            }
+
+            if(btnSubmitReq) {
+                btnSubmitReq.addEventListener('click', () => {
+                    if (reqCart.length === 0) {
+                        showToast('领用清单为空，请先从上方检索并添加物料！', 'var(--danger-red)');
+                        return;
+                    }
+                    if (!reqReason.value.trim()) {
+                        showToast('请务必填写领料原因/用途，以供审批！', 'var(--danger-red)');
+                        reqReason.style.borderColor = 'var(--danger-red)';
+                        return;
+                    }
+                    reqReason.style.borderColor = '#ccc'; 
+
+                    const originalText = btnSubmitReq.innerHTML;
+                    btnSubmitReq.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 系统流转处理中...';
+                    btnSubmitReq.disabled = true;
+
+                    setTimeout(() => {
+                        const summary = reqCart.map(c => `${c["物料名称"]}(${c.reqQty})`).join('、');
+                        
+                        const record = {
+                            workflowId: 'REQ-' + Date.now().toString().slice(-6),
+                            '物料名称': summary, 
+                            '申请人': window.currentUser ? window.currentUser.name : '未知',
+                            '所属部门': window.currentUser ? window.currentUser.dept : '未知',
+                            reason: reqReason.value.trim(),
+                            workflowStatus: '待经理审批'
+                        };
+                        
+                        pendingWorkflows.push(record);
+                        if (typeof renderDashboardTasks === 'function') renderDashboardTasks(); 
+
+                        reqCart = [];
+                        renderReqCart();
+                        reqReason.value = '';
+                        
+                        btnSubmitReq.innerHTML = originalText;
+                        btnSubmitReq.disabled = false;
+                        
+                        showToast('领用出库单已成功提交至您的部门经理进行审批！');
+                    }, 800);
+                });
+            }
+
+            // ================= 报废出库 (购物车流转模式) =================
+            let scrapCart = [];
+
+            const scrapSearchInput = document.getElementById('scrap-search-input');
+            const btnScrapSearch = document.getElementById('btn-scrap-search');
+            const scrapSearchResults = document.getElementById('scrap-search-results');
+            const scrapCartBody = document.getElementById('scrap-cart-body');
+            const scrapCartCount = document.getElementById('scrap-cart-count');
+            const scrapOrderNo = document.getElementById('scrap-order-no');
+            const scrapFiles = document.getElementById('scrap-files');
+            const btnSubmitScrap = document.getElementById('btn-submit-scrap');
+
+            function renderScrapSearch(query = '') {
+                if(!scrapSearchResults) return;
+                const filtered = reqInventory.filter(item => 
+                    item["物料名称"].includes(query) || item["物料编号"].toLowerCase().includes(query.toLowerCase())
+                );
+                
+                if (filtered.length === 0) {
+                    scrapSearchResults.innerHTML = '<tr><td colspan="22" style="text-align:center;color:#999;padding:20px;">未搜索到匹配的物料库存</td></tr>';
+                    return;
+                }
+
+                scrapSearchResults.innerHTML = filtered.map((item, index) => `
+                    <tr>
+                        ${tableColumns.map(col => {
+                            let val = item[col] || '-';
+                            if (col === '剩余库存') { val = `<span style="color:var(--success-green);font-weight:600;">${val}</span>`; }
+                            return `<td>${val}</td>`;
+                        }).join('')}
+                        <td style="position: sticky; right: 60px; background: #fff; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                            <input type="number" id="scrap-qty-${index}" min="1" max="${item['剩余库存']}" value="1" style="width: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; outline:none;">
+                        </td>
+                        <td style="position: sticky; right: 0; background: #fff; text-align:center; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                            <button class="btn-outline" onclick="window.addToScrapCart(${index})" style="padding: 4px 10px; font-size: 12px; margin:0 auto; color: var(--danger-red); border-color: var(--danger-red);"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            window.addToScrapCart = function(index) {
+                const item = reqInventory[index];
+                const qtyInput = document.getElementById(`scrap-qty-${index}`);
+                const qty = parseInt(qtyInput.value);
+
+                if (isNaN(qty) || qty <= 0 || qty > item['剩余库存']) {
+                    showToast('库存不足或输入报废数量无效！', 'var(--danger-red)');
+                    return;
+                }
+
+                const existing = scrapCart.find(c => c["入库单号"] === item["入库单号"]);
+                if (existing) {
+                    if (existing.scrapQty + qty > item['剩余库存']) {
+                        showToast(`合并失败：超出现有可用库存总上限 (${item['剩余库存']})！`, 'var(--danger-red)');
+                        return;
+                    }
+                    existing.scrapQty += qty;
+                } else {
+                    scrapCart.push({ ...item, scrapQty: qty });
+                }
+                
+                showToast(`已添加 ${qty} ${item["单位"]} [${item["物料名称"]}] 到报废清单`);
+                renderScrapCart(); 
+            };
+
+            window.removeFromScrapCart = function(index) {
+                scrapCart.splice(index, 1);
+                renderScrapCart();
+            };
+
+            function renderScrapCart() {
+                if(!scrapCartCount) return;
+                scrapCartCount.innerText = scrapCart.length;
+                if (scrapCart.length === 0) {
+                    scrapCartBody.innerHTML = '<tr><td colspan="21" style="text-align: center; color: #999; padding: 20px;">请从上方库存检索区添加需要报废的物料</td></tr>';
+                    return;
+                }
+
+                scrapCartBody.innerHTML = scrapCart.map((item, index) => `
+                    <tr>
+                        ${tableColumns.map(col => {
+                            let val = item[col] || '-';
+                            if (col === '数量') { val = `<strong style="color:var(--danger-red)">${item.scrapQty}</strong>`; }
+                            return `<td>${val}</td>`;
+                        }).join('')}
+                        <td style="position: sticky; right: 0; background: #fff; text-align:center; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                            <i class="fas fa-times-circle" style="color:var(--danger-red); cursor:pointer; font-size: 16px;" onclick="window.removeFromScrapCart(${index})" title="移除"></i>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            if(btnScrapSearch) {
+                btnScrapSearch.addEventListener('click', () => renderScrapSearch(scrapSearchInput.value.trim()));
+                scrapSearchInput.addEventListener('keyup', (e) => {
+                    if(e.key === 'Enter') renderScrapSearch(scrapSearchInput.value.trim());
+                });
+                renderScrapSearch(); 
+                renderScrapCart();   
+            }
+
+            if(btnSubmitScrap) {
+                btnSubmitScrap.addEventListener('click', () => {
+                    if (scrapCart.length === 0) {
+                        showToast('报废清单为空，请先添加需要报废的物料！', 'var(--danger-red)');
+                        return;
+                    }
+                    if (!scrapOrderNo.value.trim()) {
+                        showToast('请填写报废单号！', 'var(--danger-red)');
+                        scrapOrderNo.style.borderColor = 'var(--danger-red)';
+                        return;
+                    } else { scrapOrderNo.style.borderColor = '#ccc'; }
+                    
+                    if (scrapFiles.files.length === 0) {
+                        showToast('请上传报废凭证附件！', 'var(--danger-red)');
+                        scrapFiles.style.borderColor = 'var(--danger-red)';
+                        return;
+                    } else { scrapFiles.style.borderColor = '#ccc'; }
+
+                    const originalText = btnSubmitScrap.innerHTML;
+                    btnSubmitScrap.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 系统流转处理中...';
+                    btnSubmitScrap.disabled = true;
+
+                    setTimeout(() => {
+                        const summary = scrapCart.map(c => `${c["物料名称"]}(${c.scrapQty})`).join('、');
+                        
+                        const record = {
+                            workflowId: 'SCR-' + Date.now().toString().slice(-6),
+                            '物料名称': summary, 
+                            '申请人': window.currentUser ? window.currentUser.name : '未知',
+                            '所属部门': window.currentUser ? window.currentUser.dept : '未知',
+                            reason: `报废单号: ${scrapOrderNo.value.trim()}`,
+                            workflowStatus: '待经理审批'
+                        };
+                        
+                        pendingWorkflows.push(record);
+                        if (typeof renderDashboardTasks === 'function') renderDashboardTasks(); 
+
+                        scrapCart = [];
+                        renderScrapCart();
+                        scrapOrderNo.value = '';
+                        scrapFiles.value = '';
+                        
+                        btnSubmitScrap.innerHTML = originalText;
+                        btnSubmitScrap.disabled = false;
+                        
+                        showToast('报废单已成功提交至您的部门经理进行审批！');
+                    }, 800);
+                });
+            }
+
+            // ================= 移库管理 (检索与清单分配模式) =================
+            let transferCart = [];
+            
+            const transferSearchInput = document.getElementById('transfer-search-input');
+            const btnTransferSearch = document.getElementById('btn-transfer-search');
+            const transferSearchResults = document.getElementById('transfer-search-results');
+            const transferCartBody = document.getElementById('transfer-cart-body');
+            const transferCartCount = document.getElementById('transfer-cart-count');
+            const btnSubmitTransfer = document.getElementById('btn-submit-transfer');
+
+            function renderTransferSearch(query = '') {
+                if(!transferSearchResults) return;
+                const filtered = reqInventory.filter(item => 
+                    item["物料名称"].includes(query) || item["物料编号"].toLowerCase().includes(query.toLowerCase())
+                );
+                
+                if (filtered.length === 0) {
+                    transferSearchResults.innerHTML = '<tr><td colspan="21" style="text-align:center;color:#999;padding:20px;">未搜索到可移库的物料</td></tr>';
+                    return;
+                }
+
+                transferSearchResults.innerHTML = filtered.map((item, index) => `
+                    <tr>
+                        ${tableColumns.map(col => {
+                            let val = item[col] || '-';
+                            if (col === '剩余库存') val = `<span style="color:var(--success-green);font-weight:600;">${val}</span>`;
+                            if (col === '仓库' || col === '货位') val = `<span style="color:#666;">${val}</span>`; 
+                            return `<td>${val}</td>`;
+                        }).join('')}
+                        <td style="position: sticky; right: 0; background: #fff; text-align:center; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                            <button class="btn-outline" onclick="window.addToTransferCart(${index})" style="padding: 4px 10px; font-size: 12px; margin:0 auto; color: var(--warning-orange); border-color: var(--warning-orange);"><i class="fas fa-plus"></i> 加入清单</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            window.addToTransferCart = function(index) {
+                const item = reqInventory[index];
+                
+                const existing = transferCart.find(c => c["入库单号"] === item["入库单号"]);
+                if (existing) {
+                    showToast('该物料批次已在移库清单中，请勿重复添加！', 'var(--danger-red)');
+                    return;
+                }
+
+                transferCart.push({ ...item, trfQty: 1, newWh: '', newLoc: '' });
+                showToast(`已将 [${item["物料名称"]}] 加入待移库清单`, 'var(--warning-orange)');
+                renderTransferCart(); 
+            };
+
+            window.removeFromTransferCart = function(index) {
+                transferCart.splice(index, 1);
+                renderTransferCart();
+            };
+
+            function renderTransferCart() {
+                if(!transferCartCount) return;
+                transferCartCount.innerText = transferCart.length;
+                if (transferCart.length === 0) {
+                    transferCartBody.innerHTML = '<tr><td colspan="24" style="text-align: center; color: #999; padding: 20px;">请从上方库存检索区添加需要移库的物料</td></tr>';
+                    return;
+                }
+
+                transferCartBody.innerHTML = transferCart.map((item, index) => `
+                    <tr>
+                        ${tableColumns.map(col => {
+                            let val = item[col] || '-';
+                            if (col === '数量') val = `<span style="color:var(--warning-orange)">${item['剩余库存']}</span>`;
+                            return `<td>${val}</td>`;
+                        }).join('')}
+                        <td style="position: sticky; right: 300px; background: #fff; box-shadow: -2px 0 5px rgba(0,0,0,0.05);">
+                            <input type="number" id="trf-qty-${index}" min="1" max="${item['剩余库存']}" value="${item.trfQty}" style="width: 60px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; outline:none; border-color: var(--warning-orange);">
+                        </td>
+                        <td style="position: sticky; right: 160px; background: #fff;">
+                            <select id="trf-wh-${index}" style="width: 120px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; outline:none;">
+                                <option value="">请选择</option>
+                                <option value="A" ${item.newWh==='A'?'selected':''}>A</option>
+                                <option value="B" ${item.newWh==='B'?'selected':''}>B</option>
+                                <option value="研发中心实验室仓" ${item.newWh==='研发中心实验室仓'?'selected':''}>研发中心实验室仓</option>
+                                <option value="原材料一仓" ${item.newWh==='原材料一仓'?'selected':''}>原材料一仓</option>
+                                <option value="样机中转仓" ${item.newWh==='样机中转仓'?'selected':''}>样机中转仓</option>
+                            </select>
+                        </td>
+                        <td style="position: sticky; right: 50px; background: #fff;">
+                            <input type="text" id="trf-loc-${index}" value="${item.newLoc}" placeholder="如: B-1-0" style="width: 90px; padding: 4px; border: 1px solid #ccc; border-radius: 4px; outline:none;">
+                        </td>
+                        <td style="position: sticky; right: 0; background: #fff; text-align:center;">
+                            <i class="fas fa-times-circle" style="color:var(--danger-red); cursor:pointer; font-size: 16px;" onclick="window.removeFromTransferCart(${index})" title="移除"></i>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            if(btnTransferSearch) {
+                btnTransferSearch.addEventListener('click', () => renderTransferSearch(transferSearchInput.value.trim()));
+                transferSearchInput.addEventListener('keyup', (e) => {
+                    if(e.key === 'Enter') renderTransferSearch(transferSearchInput.value.trim());
+                });
+                renderTransferSearch(); 
+                renderTransferCart();   
+            }
+
+            if(btnSubmitTransfer) {
+                btnSubmitTransfer.addEventListener('click', () => {
+                    if (transferCart.length === 0) {
+                        showToast('移库清单为空，请先添加需要移库的物料！', 'var(--danger-red)');
+                        return;
+                    }
+
+                    let isValid = true;
+                    transferCart.forEach((item, index) => {
+                        const qtyInput = document.getElementById(`trf-qty-${index}`);
+                        const whInput = document.getElementById(`trf-wh-${index}`);
+                        const locInput = document.getElementById(`trf-loc-${index}`);
+
+                        const qty = parseInt(qtyInput.value);
+                        const wh = whInput.value;
+                        const loc = locInput.value.trim();
+
+                        if (isNaN(qty) || qty <= 0 || qty > item['剩余库存']) { isValid = false; qtyInput.style.borderColor = 'var(--danger-red)'; } else { qtyInput.style.borderColor = '#ccc'; }
+                        if (!wh) { isValid = false; whInput.style.borderColor = 'var(--danger-red)'; } else { whInput.style.borderColor = '#ccc'; }
+                        if (!loc) { isValid = false; locInput.style.borderColor = 'var(--danger-red)'; } else { locInput.style.borderColor = '#ccc'; }
+                        
+                        item.trfQty = qty;
+                        item.newWh = wh;
+                        item.newLoc = loc;
+                    });
+
+                    if(!isValid) {
+                        showToast('请完善所有必填的移库数量与新目标库位信息！', 'var(--danger-red)');
+                        return;
+                    }
+
+                    const originalText = btnSubmitTransfer.innerHTML;
+                    btnSubmitTransfer.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 系统流转处理中...';
+                    btnSubmitTransfer.disabled = true;
+
+                    setTimeout(() => {
+                        transferCart = [];
+                        renderTransferCart();
+                        
+                        btnSubmitTransfer.innerHTML = originalText;
+                        btnSubmitTransfer.disabled = false;
+                        
+                        showToast('操作成功！物料已成功分配至新库位。');
+                    }, 800);
+                });
+            }
+
+            // ================= 导出模板与批量导入 =================
+            const downloadBtns = document.querySelectorAll('.btn-download');
+            downloadBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 下载中...';
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-check"></i> 模板已下载';
+                        setTimeout(() => this.innerHTML = originalText, 2000);
+                    }, 1000);
+                });
+            });
+
+            const fileInputs = document.querySelectorAll('input[type="file"]:not([multiple]):not(#mod-exp-file1):not(#mod-exp-file2):not(#mod-exp-file3):not(#mod-exp-file4)');
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function(e) {
+                    if(e.target.files.length > 0) {
+                        const fileName = e.target.files[0].name;
+                        const importBtn = this.previousElementSibling;
+                        if (!importBtn || !importBtn.classList.contains('btn-import')) return;
+                        
+                        const originalText = importBtn.innerHTML;
+                        importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 数据读取中...';
+                        setTimeout(() => {
+                            importBtn.innerHTML = `<i class="fas fa-check-circle"></i> ${fileName} 导入成功`;
+                            importBtn.style.borderColor = 'var(--success-green)'; importBtn.style.color = 'var(--success-green)';
+                            setTimeout(() => {
+                                importBtn.innerHTML = originalText;
+                                importBtn.style.borderColor = ''; importBtn.style.color = ''; this.value = ''; 
+                            }, 3000);
+                        }, 1500);
+                    }
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>

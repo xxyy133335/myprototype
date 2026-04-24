@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报废处理 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Tab 样式 */
+        .scrap-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--jc-border-line);
+            margin-bottom: var(--jc-spacing-xl);
+            background: var(--jc-card-white);
+            padding: 0 var(--jc-spacing-xl);
+            border-radius: var(--jc-radius-card) var(--jc-radius-card) 0 0;
+        }
+
+        .scrap-tab {
+            padding: var(--jc-spacing-md) var(--jc-spacing-xl);
+            font-size: var(--jc-font-size-body);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all var(--jc-transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .scrap-tab:hover {
+            color: var(--jc-accent-teal);
+        }
+
+        .scrap-tab.active {
+            color: var(--jc-accent-teal);
+            border-bottom-color: var(--jc-accent-teal);
+        }
+
+        /* 规划中页面占位"*/
+        .planned-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50vh;
+            text-align: center;
+            padding: var(--jc-spacing-3xl);
+        }
+
+        .planned-icon {
+            width: 100px;
+            height: 100px;
+            background: var(--jc-bg-gray);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--jc-spacing-xl);
+            font-size: 40px;
+            color: var(--jc-text-muted);
+        }
+
+        .planned-title {
+            font-size: 24px;
+            font-weight: var(--jc-font-weight-bold);
+            color: var(--jc-text-dark);
+            margin-bottom: var(--jc-spacing-md);
+        }
+
+        .planned-desc {
+            font-size: var(--jc-font-size-body);
+            color: var(--jc-text-light);
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .planned-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: var(--jc-tag-purple-bg);
+            color: var(--jc-tag-purple-text);
+            border-radius: var(--jc-radius-tag);
+            font-size: var(--jc-font-size-small);
+            font-weight: var(--jc-font-weight-semibold);
+            margin-top: var(--jc-spacing-lg);
+        }
+
+        /* 报废电子流程表单 */
+        .workflow-card {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-2xl);
+        }
+
+        .workflow-notice {
+            background: var(--jc-accent-teal-light);
+            border-radius: var(--jc-radius-card);
+            padding: var(--jc-spacing-lg) var(--jc-spacing-xl);
+            margin-bottom: var(--jc-spacing-xl);
+            border-left: 4px solid var(--jc-accent-teal);
+        }
+
+        .workflow-notice-title {
+            font-size: var(--jc-font-size-body);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-accent-teal);
+            margin-bottom: var(--jc-spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .workflow-notice-title i {
+            font-size: 16px;
+        }
+
+        .workflow-notice-list {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
+            color: var(--jc-text-dark);
+            line-height: 1.8;
+        }
+
+        .workflow-notice-list li {
+            margin-bottom: 2px;
+        }
+
+        /* 拍卖文件存档 */
+        .auction-file-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--jc-spacing-md);
+        }
+
+        .auction-file-card {
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-lg);
+            padding: var(--jc-spacing-lg) var(--jc-spacing-xl);
+            background: var(--jc-bg-gray);
+            border-radius: var(--jc-radius-card);
+            transition: all var(--jc-transition-fast);
+        }
+
+        .auction-file-card:hover {
+            background: var(--jc-accent-teal-light);
+        }
+
+        .auction-file-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--jc-radius-control);
+            background: var(--jc-card-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--jc-accent-teal);
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .auction-file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .auction-file-name {
+            font-size: 14px;
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+            margin-bottom: 4px;
+        }
+
+        .auction-file-meta {
+            font-size: 12px;
+            color: var(--jc-text-light);
+        }
+
+        .auction-file-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: var(--jc-radius-tag);
+            font-size: 12px;
+            font-weight: var(--jc-font-weight-semibold);
+        }
+
+        .auction-file-status.uploaded {
+            background: var(--jc-success-green-light);
+            color: var(--jc-success-green);
+        }
+
+        .auction-file-status.pending {
+            background: var(--jc-warning-orange-light);
+            color: var(--jc-warning-orange);
+        }
+
+        .auction-file-actions {
+            display: flex;
+            gap: var(--jc-spacing-sm);
+            flex-shrink: 0;
+        }
+
+        .auction-upload-input {
+            display: none;
+        }
+
+        .workflow-section-title {
+            font-size: var(--jc-font-size-card-title);
+            font-weight: var(--jc-font-weight-semibold);
+            margin-bottom: var(--jc-spacing-lg);
+            padding-bottom: var(--jc-spacing-md);
+            border-bottom: 1px solid var(--jc-border-line-light);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .workflow-section-title i {
+            color: var(--jc-accent-teal);
+        }
+
+        .workflow-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-bottom: var(--jc-spacing-lg);
+        }
+
+        .workflow-table th {
+            background: var(--jc-bg-gray);
+            padding: 10px 8px;
+            text-align: center;
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+            border: 1px solid var(--jc-border-line);
+            white-space: nowrap;
+        }
+
+        .workflow-table td {
+            padding: 6px 8px;
+            border: 1px solid var(--jc-border-line);
+            text-align: center;
+        }
+
+        .workflow-table .form-control {
+            padding: 6px 8px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .workflow-table select.form-control {
+            padding-right: 22px;
+            background-position: right 6px center;
+            background-size: 10px 10px;
+            cursor: pointer;
+        }
+
+        .workflow-table tfoot td {
+            background: var(--jc-bg-gray);
+            font-weight: var(--jc-font-weight-semibold);
+            text-align: center;
+        }
+
+        .workflow-table tfoot .total-label {
+            text-align: right;
+            padding-right: 16px;
+        }
+
+        .workflow-row-actions {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .workflow-row-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: none;
+            border-radius: var(--jc-radius-control);
+            cursor: pointer;
+            transition: all var(--jc-transition-fast);
+        }
+
+        .workflow-row-btn.add {
+            background: var(--jc-accent-teal);
+            color: #fff;
+        }
+
+        .workflow-row-btn.add:hover {
+            background: var(--jc-primary-blue);
+        }
+
+        .workflow-row-btn.remove {
+            background: var(--jc-danger-red);
+            color: #fff;
+        }
+
+        .workflow-row-btn.remove:hover {
+            background: #c0392b;
+        }
+
+        .workflow-form-footer {
+            margin-top: var(--jc-spacing-xl);
+        }
+
+        .workflow-reason textarea {
+            width: 100%;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .workflow-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--jc-spacing-md);
+            margin-top: var(--jc-spacing-md);
+        }
+
+        .workflow-option-item {
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+            padding: var(--jc-spacing-sm) 0;
+        }
+
+        .workflow-option-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--jc-accent-teal);
+        }
+
+        .workflow-option-item label {
+            font-size: 14px;
+            color: var(--jc-text-dark);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .workflow-option-item .form-control {
+            flex: 1;
+            margin-left: var(--jc-spacing-sm);
+            padding: 4px 8px;
+            font-size: 13px;
+        }
+
+        .workflow-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--jc-spacing-md);
+            margin-top: var(--jc-spacing-xl);
+            padding-top: var(--jc-spacing-lg);
+            border-top: 1px solid var(--jc-border-line-light);
+        }
+
+        /* 存"Tab */
+        .sub-tabs {
+            display: flex;
+            gap: var(--jc-spacing-xs);
+            margin-bottom: var(--jc-spacing-lg);
+            padding: var(--jc-spacing-sm) var(--jc-spacing-lg);
+            background: var(--jc-bg-gray);
+            border-radius: var(--jc-radius-control);
+        }
+
+        .sub-tab {
+            padding: var(--jc-spacing-sm) var(--jc-spacing-md);
+            font-size: 13px;
+            font-weight: var(--jc-font-weight-medium);
+            color: var(--jc-text-light);
+            cursor: pointer;
+            border-radius: var(--jc-radius-control);
+            transition: all var(--jc-transition-fast);
+            border: none;
+            background: transparent;
+        }
+
+        .sub-tab:hover { color: var(--jc-accent-teal); background: var(--jc-card-white); }
+        .sub-tab.active { color: var(--jc-accent-teal); background: var(--jc-card-white); font-weight: var(--jc-font-weight-semibold); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+        /* 审批卡片 */
+        .approval-card {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-xl);
+            margin-bottom: var(--jc-spacing-lg);
+            border-left: 4px solid var(--jc-accent-teal);
+        }
+        .approval-card.warning { border-left-color: var(--jc-warning-orange); }
+        .approval-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--jc-spacing-md);
+        }
+        .approval-card-title { font-weight: var(--jc-font-weight-semibold); color: var(--jc-text-dark); font-size: 15px; }
+        .approval-card-meta { font-size: 13px; color: var(--jc-text-light); margin-top: 4px; }
+        .approval-card-value { font-size: 18px; font-weight: var(--jc-font-weight-bold); color: var(--jc-danger-red); }
+        .approval-card-body { font-size: 13px; color: var(--jc-text-dark); margin-bottom: var(--jc-spacing-md); }
+        .approval-card-footer { display: flex; justify-content: flex-end; gap: var(--jc-spacing-sm); }
+
+        /* 流程追踪 */
+        .flow-tracker { display: flex; align-items: center; justify-content: center; margin: var(--jc-spacing-xl) 0; padding: var(--jc-spacing-lg); background: var(--jc-bg-gray); border-radius: var(--jc-radius-card); }
+        .flow-step { display: flex; flex-direction: column; align-items: center; gap: var(--jc-spacing-xs); }
+        .flow-step-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--jc-card-white); border: 2px solid var(--jc-border-line); color: var(--jc-text-muted); font-size: 14px; }
+        .flow-step.active .flow-step-dot { background: var(--jc-accent-teal); border-color: var(--jc-accent-teal); color: #fff; }
+        .flow-step.completed .flow-step-dot { background: var(--jc-success-green); border-color: var(--jc-success-green); color: #fff; }
+        .flow-step.rejected .flow-step-dot { background: var(--jc-danger-red); border-color: var(--jc-danger-red); color: #fff; }
+        .flow-step-label { font-size: 12px; color: var(--jc-text-light); }
+        .flow-step.active .flow-step-label { color: var(--jc-accent-teal); font-weight: var(--jc-font-weight-semibold); }
+        .flow-step-line { width: 40px; height: 2px; background: var(--jc-border-line); margin: 0 var(--jc-spacing-sm); margin-bottom: 20px; }
+        .flow-step-line.completed { background: var(--jc-success-green); }
+
+        .status-tag { display: inline-block; padding: 4px 10px; border-radius: var(--jc-radius-tag); font-size: 12px; font-weight: var(--jc-font-weight-semibold); }
+        .status-tag.pending { background: var(--jc-warning-orange-light); color: var(--jc-warning-orange); }
+        .status-tag.approved { background: var(--jc-success-green-light); color: var(--jc-success-green); }
+        .status-tag.rejected { background: var(--jc-danger-red-light); color: var(--jc-danger-red); }
+        .status-tag.completed { background: var(--jc-success-green-light); color: var(--jc-success-green); }
+
+        .empty-state { text-align: center; padding: 60px var(--jc-spacing-xl); color: var(--jc-text-muted); }
+        .empty-state i { font-size: 48px; margin-bottom: var(--jc-spacing-md); opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="../802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="../dashboard.html" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inbound.html" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="outbound.html" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="transfer.html" class="nav-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="query.html" class="nav-link">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inventory.html" class="nav-link planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="express.html" class="nav-link">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="scrap.html" class="nav-link active">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="qrcode.html" class="nav-link">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="config.html" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="../dashboard.html">首页</a>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current">报废处理</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <!-- 页面标题 -->
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <div>
+                                <h1 class="page-title">报废处理</h1>
+                                <p class="page-description">报废电子流程与拍卖流程管理</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 切换 -->
+                    <div class="scrap-tabs">
+                        <div class="scrap-tab active" data-tab="workflow">
+                            <i class="fas fa-file-alt"></i>
+                            <span>报废电子流程</span>
+                        </div>
+                        <div class="scrap-tab" data-tab="auction">
+                            <i class="fas fa-gavel"></i>
+                            <span>拍卖流程</span>
+                        </div>
+                    </div>
+
+                    <!-- 报废电子流程 -->
+                    <div class="tab-content active" id="workflowTab">
+                        <!-- 存"Tab 切换 -->
+                        <div class="sub-tabs">
+                            <button class="sub-tab active" data-subtab="apply">
+                                <i class="fas fa-edit"></i> 报废申请
+                            </button>
+                            <button class="sub-tab" data-subtab="myapply">
+                                <i class="fas fa-list"></i> 我的申请
+                            </button>
+                        </div>
+
+                        <!-- 报废申请 -->
+                        <div class="sub-tab-content active" id="applySubTab">
+                            <div class="workflow-card">
+                                <div class="workflow-section-title">
+                                    <i class="fas fa-table"></i> 报废物料清单
+                                </div>
+                                <table class="workflow-table" id="workflowTable">
+                                    <thead>
+                                        <tr>
+                                            <th>物料编号或系列号</th>
+                                            <th>零件描述</th>
+                                            <th style="width:90px;">免3C</th>
+                                            <th style="width:90px;">保密拆解</th>
+                                            <th style="width:70px;">数量</th>
+                                            <th>物料原值（元）</th>
+                                            <th>估计剩余价值（元）</th>
+                                            <th>所属项目号或成本中必</th>
+                                            <th style="width:90px;">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="workflowTableBody">
+                                        <tr class="workflow-row">
+                                            <td><input type="text" class="form-control" name="materialCode" placeholder="请输入"></td>
+                                            <td><input type="text" class="form-control" name="partDesc" placeholder="请输入"></td>
+                                            <td>
+                                                <select class="form-control" name="exempt3C">
+                                                    <option value="">请选择</option>
+                                                    <option value="是">是</option>
+                                                    <option value="否">否</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-control" name="confidential">
+                                                    <option value="">请选择</option>
+                                                    <option value="是">是</option>
+                                                    <option value="否">否</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="number" class="form-control" name="qty" placeholder="0" min="0"></td>
+                                            <td><input type="number" class="form-control" name="originalValue" placeholder="0.00" step="0.01"></td>
+                                            <td><input type="number" class="form-control" name="remainingValue" placeholder="0.00" step="0.01"></td>
+                                            <td><input type="text" class="form-control" name="projectOrCost" placeholder="请输入"></td>
+                                            <td>
+                                                <div class="workflow-row-actions">
+                                                    <button type="button" class="workflow-row-btn add" onclick="addWorkflowRow(this)"><i class="fas fa-plus"></i></button>
+                                                    <button type="button" class="workflow-row-btn remove" onclick="removeWorkflowRow(this)"><i class="fas fa-minus"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="4" class="total-label">合计</td>
+                                            <td id="totalQty">0</td>
+                                            <td id="totalOriginal">0.00</td>
+                                            <td id="totalRemaining">0.00</td>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                                <div class="workflow-notice">
+                                    <div class="workflow-notice-title"><i class="fas fa-info-circle"></i> 说明</div>
+                                    <ol class="workflow-notice-list">
+                                        <li>所处置的物料范围包括各种已经费用化的零部件、样机、工装及不属于固定资产的低值易耗品（比如小工具）等。</li>
+                                        <li>对于一些特殊物料的处理，需和废料处理部门预先沟通后再确定处理方式。</li>
+                                        <li>如处理机组或物料涉及到免3C管理，处理申请单上“免3C”栏需要填写“是”，反之填“否”。</li>
+                                        <li>如处理机组或物料涉及到保密要求需要拆解处理，处理申请单上“保密拆解”栏需要填写“是”，反之填“否”。</li>
+                                    </ol>
+                                </div>
+                                <div class="workflow-form-footer">
+                                    <div class="form-group workflow-reason">
+                                        <label class="form-label required">报废原因</label>
+                                        <textarea class="form-control" id="scrapReason" rows="3" placeholder="请详细填写报废原因..." required></textarea>
+                                    </div>
+                                    <div class="form-group" style="margin-top: var(--jc-spacing-lg);">
+                                        <label class="form-label">建议处理方式</label>
+                                        <div class="workflow-options">
+                                            <div class="workflow-option-item"><input type="checkbox" id="disposeNoIncome" name="disposeType" value="noIncome"><label for="disposeNoIncome">无收益报库</label></div>
+                                            <div class="workflow-option-item"><input type="checkbox" id="disposeAuction" name="disposeType" value="auction"><label for="disposeAuction">有收益拍升</label></div>
+                                            <div class="workflow-option-item"><input type="checkbox" id="disposeCost" name="disposeType" value="cost"><label for="disposeCost">新增处置费用计入（项目号）：</label><input type="text" class="form-control" id="disposeCostProject" placeholder="请输入项目号" style="max-width:150px;"></div>
+                                            <div class="workflow-option-item"><input type="checkbox" id="disposeOther" name="disposeType" value="other"><label for="disposeOther">其他</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="workflow-actions">
+                                    <button type="button" class="btn btn-secondary" id="resetWorkflowBtn"><i class="fas fa-undo"></i> 重置</button>
+                                    <button type="button" class="btn btn-primary" id="submitWorkflowBtn"><i class="fas fa-paper-plane"></i> 提交报废申请</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 我的申请 -->
+                        <div class="sub-tab-content" id="myapplySubTab">
+                            <div id="myApplyList"></div>
+                        </div>
+
+
+                    </div>
+
+                    <!-- 拍卖流程 -->
+                    <div class="tab-content" id="auctionTab">
+                        <div class="workflow-card">
+                            <div class="workflow-section-title">
+                                <i class="fas fa-folder-open"></i> 拍卖文件存档
+                            </div>
+                            <div class="auction-file-list" id="auctionFileList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/data.js"></script>
+    <script>
+        // 检查登录状态 
+        if (!Users.isLoggedIn()) {
+            window.location.href = '../index.html';
+        }
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                
+                const roleMap = {
+                    admin: '系统管理员',
+                    keeper: '仓管员',
+                    engineer: '工程师'
+                };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+            }
+        }
+
+        // Tab 切换
+        document.querySelectorAll('.scrap-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.dataset.tab;
+                document.querySelectorAll('.scrap-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(targetTab + 'Tab').classList.add('active');
+            });
+        });
+
+        // 侧边栏折叠 
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // 退出登录 
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 500);
+            });
+        });
+
+        // ================= 报废电子流程表单逻辑 =================
+
+        // 添加表 
+        function addWorkflowRow(btn) {
+            const tbody = document.getElementById('workflowTableBody');
+            const newRow = document.createElement('tr');
+            newRow.className = 'workflow-row';
+            newRow.innerHTML = `
+                <td><input type="text" class="form-control" name="materialCode" placeholder="请输入"></td>
+                <td><input type="text" class="form-control" name="partDesc" placeholder="请输入"></td>
+                <td>
+                    <select class="form-control" name="exempt3C">
+                        <option value="">请选择</option>
+                        <option value="是">是</option>
+                        <option value="否">否</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control" name="confidential">
+                        <option value="">请选择</option>
+                        <option value="是">是</option>
+                        <option value="否">否</option>
+                    </select>
+                </td>
+                <td><input type="number" class="form-control" name="qty" placeholder="0" min="0" value=""></td>
+                <td><input type="number" class="form-control" name="originalValue" placeholder="0.00" step="0.01" value=""></td>
+                <td><input type="number" class="form-control" name="remainingValue" placeholder="0.00" step="0.01" value=""></td>
+                <td><input type="text" class="form-control" name="projectOrCost" placeholder="请输入"></td>
+                <td>
+                    <div class="workflow-row-actions">
+                        <button type="button" class="workflow-row-btn add" onclick="addWorkflowRow(this)" title="添加一表">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button type="button" class="workflow-row-btn remove" onclick="removeWorkflowRow(this)" title="删除此行">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+            bindWorkflowInputs(newRow);
+        }
+
+        // 删除表 
+        function removeWorkflowRow(btn) {
+            const tbody = document.getElementById('workflowTableBody');
+            const rows = tbody.querySelectorAll('.workflow-row');
+            if (rows.length <= 1) {
+                Toast.error('至少需要保留一表');
+                return;
+            }
+            const row = btn.closest('.workflow-row');
+            row.remove();
+            calcWorkflowTotals();
+        }
+
+        // 绑定输入事件用于自动计算合计
+        function bindWorkflowInputs(row) {
+            const inputs = row.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                input.addEventListener('input', calcWorkflowTotals);
+            });
+        }
+
+        // 计算合计
+        function calcWorkflowTotals() {
+            const rows = document.querySelectorAll('#workflowTableBody .workflow-row');
+            let totalQty = 0;
+            let totalOriginal = 0;
+            let totalRemaining = 0;
+
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('[name="qty"]').value) || 0;
+                const original = parseFloat(row.querySelector('[name="originalValue"]').value) || 0;
+                const remaining = parseFloat(row.querySelector('[name="remainingValue"]').value) || 0;
+
+                totalQty += qty;
+                totalOriginal += original;
+                totalRemaining += remaining;
+            });
+
+            document.getElementById('totalQty').textContent = totalQty;
+            document.getElementById('totalOriginal').textContent = totalOriginal.toFixed(2);
+            document.getElementById('totalRemaining').textContent = totalRemaining.toFixed(2);
+        }
+
+        // 获取表单数据
+        function getWorkflowFormData() {
+            const rows = document.querySelectorAll('#workflowTableBody .workflow-row');
+            const items = [];
+
+            rows.forEach(row => {
+                const materialCode = row.querySelector('[name="materialCode"]').value.trim();
+                if (!materialCode) return;
+
+                items.push({
+                    materialCode: materialCode,
+                    partDesc: row.querySelector('[name="partDesc"]').value.trim(),
+                    exempt3C: row.querySelector('[name="exempt3C"]').value,
+                    confidential: row.querySelector('[name="confidential"]').value,
+                    qty: parseFloat(row.querySelector('[name="qty"]').value) || 0,
+                    originalValue: parseFloat(row.querySelector('[name="originalValue"]').value) || 0,
+                    remainingValue: parseFloat(row.querySelector('[name="remainingValue"]').value) || 0,
+                    projectOrCost: row.querySelector('[name="projectOrCost"]').value.trim()
+                });
+            });
+
+            const disposeTypes = [];
+            document.querySelectorAll('input[name="disposeType"]:checked').forEach(cb => {
+                disposeTypes.push(cb.value);
+            });
+
+            return {
+                items: items,
+                reason: document.getElementById('scrapReason').value.trim(),
+                disposeTypes: disposeTypes,
+                disposeCostProject: document.getElementById('disposeCostProject').value.trim(),
+                totalQty: document.getElementById('totalQty').textContent,
+                totalOriginal: document.getElementById('totalOriginal').textContent,
+                totalRemaining: document.getElementById('totalRemaining').textContent
+            };
+        }
+
+        // 提交报废申请
+        document.getElementById('submitWorkflowBtn').addEventListener('click', function() {
+            const data = getWorkflowFormData();
+
+            if (data.items.length === 0) {
+                Toast.error('请至少填写一行物料信息（物料编号为必填）');
+                return;
+            }
+            if (!data.reason) {
+                Toast.error('请填写报废原因');
+                document.getElementById('scrapReason').style.borderColor = 'var(--jc-danger-red)';
+                document.getElementById('scrapReason').focus();
+                return;
+            } else {
+                document.getElementById('scrapReason').style.borderColor = '';
+            }
+            if (data.disposeTypes.length === 0) {
+                Toast.error('请至少选择一种建议处理方式');
+                return;
+            }
+            if (data.disposeTypes.includes('cost') && !data.disposeCostProject) {
+                Toast.error('请填写新增处置费用计入的项目号');
+                document.getElementById('disposeCostProject').style.borderColor = 'var(--jc-danger-red)';
+                document.getElementById('disposeCostProject').focus();
+                return;
+            } else {
+                document.getElementById('disposeCostProject').style.borderColor = '';
+            }
+
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const user = Users.getCurrentUser();
+                const flowData = {
+                    ...data,
+                    applicant: user ? user.name : '未知',
+                    department: user ? (user.department || '') : ''
+                };
+                // 创建流程，初始状态为待部门经理审批 
+                const flow = Flows.create('scrap_workflow', flowData, { status: 'pending', currentStep: 'manager' });
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                Toast.success(`报废申请 ${flow.flowNo} 已提交至部门经理审批！`);
+                resetWorkflowForm();
+            }, 800);
+        });
+
+        // 重置表单
+        function resetWorkflowForm() {
+            const tbody = document.getElementById('workflowTableBody');
+            tbody.innerHTML = `
+                <tr class="workflow-row">
+                    <td><input type="text" class="form-control" name="materialCode" placeholder="请输入"></td>
+                    <td><input type="text" class="form-control" name="partDesc" placeholder="请输入"></td>
+                    <td>
+                        <select class="form-control" name="exempt3C">
+                            <option value="">请选择</option>
+                            <option value="是">是</option>
+                            <option value="否">否</option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-control" name="confidential">
+                            <option value="">请选择</option>
+                            <option value="是">是</option>
+                            <option value="否">否</option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="form-control" name="qty" placeholder="0" min="0" value=""></td>
+                    <td><input type="number" class="form-control" name="originalValue" placeholder="0.00" step="0.01" value=""></td>
+                    <td><input type="number" class="form-control" name="remainingValue" placeholder="0.00" step="0.01" value=""></td>
+                    <td><input type="text" class="form-control" name="projectOrCost" placeholder="请输入"></td>
+                    <td>
+                        <div class="workflow-row-actions">
+                            <button type="button" class="workflow-row-btn add" onclick="addWorkflowRow(this)" title="添加一表">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button type="button" class="workflow-row-btn remove" onclick="removeWorkflowRow(this)" title="删除此行">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            bindWorkflowInputs(tbody.querySelector('.workflow-row'));
+
+            document.getElementById('scrapReason').value = '';
+            document.getElementById('scrapReason').style.borderColor = '';
+            document.querySelectorAll('input[name="disposeType"]').forEach(cb => cb.checked = false);
+            document.getElementById('disposeCostProject').value = '';
+            document.getElementById('disposeCostProject').style.borderColor = '';
+            calcWorkflowTotals();
+        }
+
+        document.getElementById('resetWorkflowBtn').addEventListener('click', resetWorkflowForm);
+
+        // ================= 存"Tab 切换 =================
+        document.querySelectorAll('.sub-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const target = this.dataset.subtab;
+                document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.sub-tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(target + 'SubTab').classList.add('active');
+                if (target === 'myapply') renderMyApply();
+            });
+        });
+
+        // ================= 状态辅助函数"=================
+        const STEP_LABELS = {
+            manager: '待部门经理审批',
+            gm: '待总经理审批',
+            finance: '待财务审批',
+            keeper: '待仓管处理',
+            completed: '已完成',
+            rejected: '已驳回'
+        };
+
+        const STEP_STATUS_CLASS = {
+            manager: 'pending',
+            gm: 'pending',
+            finance: 'pending',
+            keeper: 'approved',
+            completed: 'completed',
+            rejected: 'rejected'
+        };
+
+        function getStatusTag(step) {
+            const cls = STEP_STATUS_CLASS[step] || 'pending';
+            const label = STEP_LABELS[step] || step;
+            return `<span class="status-tag ${cls}">${label}</span>`;
+        }
+
+        function renderFlowDetail(flow) {
+            const items = flow.data.items || [];
+            const itemsHtml = items.map((it, i) => `
+                <tr><td>${i+1}</td><td>${it.materialCode}</td><td>${it.partDesc}</td><td>${it.exempt3C||'-'}</td><td>${it.confidential||'-'}</td><td>${it.qty}</td><td>${it.originalValue}</td><td>${it.remainingValue}</td><td>${it.projectOrCost||'-'}</td></tr>
+            `).join('');
+
+            const history = flow.approvalHistory || [];
+            const historyHtml = history.length ? history.map(h => `
+                <div style="font-size:13px;margin-bottom:8px;padding:8px;background:var(--jc-bg-gray);border-radius:4px;">
+                    <strong>${STEP_LABELS[h.step] || h.step}</strong> — ${h.approver} — ${h.result === 'approved' ? '通过' : '驳回'}
+                    ${h.comment ? `<div style="color:var(--jc-text-light);margin-top:4px;">备注：${h.comment}</div>` : ''}
+                    <div style="color:var(--jc-text-muted);font-size:12px;margin-top:4px;">${DateUtils.format(h.time, 'YYYY-MM-DD HH:mm')}</div>
+                </div>
+            `).join('') : '<div style="color:var(--jc-text-muted);font-size:13px;">暂无审批记录</div>';
+
+            return `
+                <div style="max-height:70vh;overflow-y:auto;padding-right:8px;">
+                    <div style="margin-bottom:16px;">
+                        <div style="font-size:15px;font-weight:600;margin-bottom:8px;">流程单号：${flow.flowNo}</div>
+                        <div style="font-size:13px;color:var(--jc-text-light);">申请人：${flow.creator} | 申请时间：${DateUtils.format(flow.createTime, 'YYYY-MM-DD HH:mm')}</div>
+                        <div style="margin-top:8px;">当前状态：${getStatusTag(flow.currentStep)}</div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <div style="font-weight:600;margin-bottom:8px;font-size:14px;">物料清单</div>
+                        <table class="table" style="font-size:12px;">
+                            <thead><tr><th>序号</th><th>物料编号</th><th>零件描述</th><th>免3C</th><th>保密拆解</th><th>数量</th><th>原值</th><th>残值</th><th>项目号</th></tr></thead>
+                            <tbody>${itemsHtml}</tbody>
+                        </table>
+                        <div style="text-align:right;font-size:13px;font-weight:600;margin-top:8px;">
+                            合计：数量 ${flow.data.totalQty} | 原值"¥${flow.data.totalOriginal} | 残值"¥${flow.data.totalRemaining}
+                        </div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <div style="font-weight:600;margin-bottom:8px;font-size:14px;">报废原因</div>
+                        <div style="font-size:13px;padding:10px;background:var(--jc-bg-gray);border-radius:4px;">${flow.data.reason}</div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <div style="font-weight:600;margin-bottom:8px;font-size:14px;">建议处理方式</div>
+                        <div style="font-size:13px;">${(flow.data.disposeTypes||[]).join('、')}${flow.data.disposeCostProject ? '（项目号：' + flow.data.disposeCostProject + '）' : ''}</div>
+                    </div>
+                    <div>
+                        <div style="font-weight:600;margin-bottom:8px;font-size:14px;">审批记录</div>
+                        ${historyHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function openFlowDetail(flowId) {
+            const flow = Flows.getAll().find(f => f.id === flowId);
+            if (!flow) return;
+            Modal.open(renderFlowDetail(flow), { title: '报废申请详情', size: 'lg' });
+        }
+
+        // ================= 我的申请 =================
+        function renderMyApply() {
+            const user = Users.getCurrentUser();
+            const list = Flows.getAll().filter(f => f.type === 'scrap_workflow' && f.creatorId === (user?.id || 0));
+            const container = document.getElementById('myApplyList');
+            if (list.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>暂无申请记录</p></div>';
+                return;
+            }
+            container.innerHTML = list.map(flow => `
+                <div class="approval-card ${flow.currentStep === 'rejected' ? 'warning' : ''}">
+                    <div class="approval-card-header">
+                        <div>
+                            <div class="approval-card-title">${flow.flowNo}</div>
+                            <div class="approval-card-meta">申请时间：${DateUtils.format(flow.createTime, 'YYYY-MM-DD HH:mm')} | 物料数：${flow.data.items?.length || 0} 项</div>
+                        </div>
+                        <div>${getStatusTag(flow.currentStep)}</div>
+                    </div>
+                    <div class="approval-card-body">
+                        残值合计：<span style="color:var(--jc-danger-red);font-weight:600;">¥${flow.data.totalRemaining}</span>
+                        | 报废原因：${flow.data.reason?.substring(0, 50)}${flow.data.reason?.length > 50 ? '...' : ''}
+                    </div>
+                    <div class="approval-card-footer">
+                        <button class="btn btn-secondary btn-sm" onclick="openFlowDetail(${flow.id})"><i class="fas fa-eye"></i> 查看详情</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+
+
+        // ================= 拍卖文件存档 =================
+        const AUCTION_FILES = [
+            { id: 'auction_list', name: 'AEC 拍卖物料清单' },
+            { id: 'auction_list_img', name: 'AEC 拍卖物料图文并茂清单' },
+            { id: 'auction_bid_list', name: 'AEC 拍卖物料中标清单' },
+            { id: 'auction_residual', name: 'AEC 拍卖物料清单残值版' },
+            { id: 'scrap_scan', name: '物料处理申请单扫描版' },
+            { id: 'pickup_sign', name: 'AEC 拍卖物料供应商提货签字单' },
+            { id: 'supplier_bid', name: '供应商投标资料' },
+            { id: 'bid_email', name: '开标邮件（PUR发的）' }
+        ];
+        const AUCTION_STORAGE_KEY = 'auction_files';
+
+        function getAuctionFiles() {
+            const data = localStorage.getItem(AUCTION_STORAGE_KEY);
+            return data ? JSON.parse(data) : {};
+        }
+
+        function saveAuctionFile(fileId, fileName, fileSize) {
+            const data = getAuctionFiles();
+            data[fileId] = {
+                fileName: fileName,
+                fileSize: fileSize,
+                uploadTime: new Date().toISOString()
+            };
+            localStorage.setItem(AUCTION_STORAGE_KEY, JSON.stringify(data));
+            renderAuctionFiles();
+        }
+
+        function deleteAuctionFile(fileId) {
+            const data = getAuctionFiles();
+            delete data[fileId];
+            localStorage.setItem(AUCTION_STORAGE_KEY, JSON.stringify(data));
+            renderAuctionFiles();
+            Toast.success('文件已删除');
+        }
+
+        function renderAuctionFiles() {
+            const container = document.getElementById('auctionFileList');
+            if (!container) return;
+            const data = getAuctionFiles();
+            container.innerHTML = AUCTION_FILES.map((item, index) => {
+                const record = data[item.id];
+                const uploaded = !!record;
+                return `
+                    <div class="auction-file-card">
+                        <div class="auction-file-icon">
+                            <i class="fas ${uploaded ? 'fa-file-alt' : 'fa-file'}"></i>
+                        </div>
+                        <div class="auction-file-info">
+                            <div class="auction-file-name">${index + 1}. ${item.name}</div>
+                            <div class="auction-file-meta">
+                                ${uploaded ? `
+                                    <span><i class="fas fa-paperclip"></i> ${record.fileName}</span>
+                                    <span style="margin-left:12px;"><i class="far fa-clock"></i> ${DateUtils.format(record.uploadTime, 'YYYY-MM-DD HH:mm')}</span>
+                                ` : '<span style="color:var(--jc-text-muted);"><i class="fas fa-upload"></i> 暂未上传</span>'}
+                            </div>
+                        </div>
+                        <div>
+                            <span class="auction-file-status ${uploaded ? 'uploaded' : 'pending'}">${uploaded ? '已上传' : '待上传'}</span>
+                        </div>
+                        <div class="auction-file-actions">
+                            ${uploaded ? `
+                                <button class="btn btn-secondary btn-sm" onclick="downloadAuctionFile('${item.id}')"><i class="fas fa-download"></i> 下载</button>
+                                <button class="btn btn-danger btn-sm" onclick="confirmDeleteAuctionFile('${item.id}')"><i class="fas fa-trash"></i> 删除</button>
+                            ` : `
+                                <button class="btn btn-primary btn-sm" onclick="document.getElementById('auctionUpload_${item.id}').click()"><i class="fas fa-upload"></i> 上传</button>
+                                <input type="file" class="auction-upload-input" id="auctionUpload_${item.id}" onchange="handleAuctionUpload(this, '${item.id}')">
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleAuctionUpload(input, fileId) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            saveAuctionFile(fileId, file.name, file.size);
+            Toast.success(`文件 ${file.name} 上传成功`);
+            input.value = '';
+        }
+
+        function confirmDeleteAuctionFile(fileId) {
+            Modal.confirm('确定删除该文件？', () => {
+                deleteAuctionFile(fileId);
+            });
+        }
+
+        function downloadAuctionFile(fileId) {
+            const data = getAuctionFiles();
+            const record = data[fileId];
+            if (!record) {
+                Toast.error('文件不存在');
+                return;
+            }
+            const blob = new Blob(['这是模拟文件内容：' + record.fileName + '\n上传时间：' + DateUtils.format(record.uploadTime, 'YYYY-MM-DD HH:mm')], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = record.fileName;
+            link.click();
+            Toast.success('下载已开委');
+        }
+
+        // 初始区 
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            const firstRow = document.querySelector('#workflowTableBody .workflow-row');
+            if (firstRow) bindWorkflowInputs(firstRow);
+            renderMyApply();
+            renderAuctionFiles();
+        });
+    </script>
+</body>
+</html>

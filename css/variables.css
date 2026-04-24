@@ -1,0 +1,244 @@
+/**
+ * myPrototype 设计系统 - CSS 变量
+ * 江森自控 (Johnson Controls) - 仓储与试制管理系统
+ * 版本: V1.0
+ */
+
+:root {
+    /* ==================== 品牌与主色调 ==================== */
+    --jc-primary-blue: #003366;
+    --jc-primary-blue-dark: #002244;
+    --jc-accent-teal: #00A3E0;
+    --jc-accent-teal-light: rgba(0, 163, 224, 0.1);
+    --jc-accent-teal-hover: #0088c0;
+
+    /* ==================== 状态与语义色 ==================== */
+    --jc-danger-red: #E63946;
+    --jc-danger-red-light: rgba(230, 57, 70, 0.1);
+    --jc-warning-orange: #F4A261;
+    --jc-warning-orange-light: #FFF3E0;
+    --jc-success-green: #2A9D8F;
+    --jc-success-green-light: rgba(42, 157, 143, 0.1);
+    
+    /* 标黄高亮 */
+    --jc-highlight-yellow-bg: #FFFDF0;
+    --jc-highlight-yellow-border: #FFE082;
+    --jc-highlight-yellow-text: #F57F17;
+
+    /* ==================== 中性色与灰阶 ==================== */
+    --jc-bg-gray: #F5F7FA;
+    --jc-card-white: #FFFFFF;
+    --jc-text-dark: #333333;
+    --jc-text-light: #666666;
+    --jc-text-muted: #888888;
+    --jc-border-line: #E0E0E0;
+    --jc-border-line-light: #F0F0F0;
+    --jc-input-bg: #FAFAFA;
+
+    /* ==================== 标签颜色 ==================== */
+    --jc-tag-blue-bg: #E3F2FD;
+    --jc-tag-blue-text: #1976D2;
+    --jc-tag-purple-bg: #F3E5F5;
+    --jc-tag-purple-text: #7B1FA2;
+    --jc-tag-orange-bg: #FFF3E0;
+    --jc-tag-orange-text: #F57C00;
+    --jc-tag-green-bg: #E8F5E9;
+    --jc-tag-green-text: #388E3C;
+
+    /* ==================== 字体规范 ==================== */
+    --jc-font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    
+    /* 字体大小 */
+    --jc-font-size-page-title: 24px;
+    --jc-font-size-card-title: 16px;
+    --jc-font-size-stat-value: 32px;
+    --jc-font-size-body: 14px;
+    --jc-font-size-small: 12px;
+    --jc-font-size-meta: 13px;
+
+    /* 字重 */
+    --jc-font-weight-normal: 400;
+    --jc-font-weight-semibold: 600;
+    --jc-font-weight-bold: 700;
+
+    /* ==================== 间距系统 ==================== */
+    --jc-spacing-xs: 4px;
+    --jc-spacing-sm: 8px;
+    --jc-spacing-md: 12px;
+    --jc-spacing-lg: 16px;
+    --jc-spacing-xl: 20px;
+    --jc-spacing-2xl: 24px;
+    --jc-spacing-3xl: 30px;
+
+    /* ==================== 布局尺寸 ==================== */
+    --jc-sidebar-width: 250px;
+    --jc-header-height: 64px;
+    --jc-container-max-width: 1400px;
+    --jc-container-padding: 30px;
+
+    /* ==================== 圆角 ==================== */
+    --jc-radius-card: 8px;
+    --jc-radius-control: 6px;
+    --jc-radius-tag: 4px;
+    --jc-radius-circle: 50%;
+
+    /* ==================== 阴影 ==================== */
+    --jc-shadow-card: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --jc-shadow-modal: 0 8px 24px rgba(0, 51, 102, 0.1);
+    --jc-shadow-focus: 0 0 0 3px rgba(0, 163, 224, 0.1);
+    --jc-shadow-dropdown: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    /* ==================== 过渡动画 ==================== */
+    --jc-transition-fast: 0.15s ease;
+    --jc-transition-normal: 0.25s ease;
+    --jc-transition-slow: 0.35s ease;
+
+    /* ==================== Z-Index 层级 ==================== */
+    --jc-z-dropdown: 100;
+    --jc-z-sticky: 200;
+    --jc-z-modal-backdrop: 300;
+    --jc-z-modal: 400;
+    --jc-z-toast: 500;
+    --jc-z-tooltip: 600;
+}
+
+/* ==================== 全局重置 ==================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--jc-font-family);
+    font-size: var(--jc-font-size-body);
+    font-weight: var(--jc-font-weight-normal);
+    color: var(--jc-text-dark);
+    background-color: var(--jc-bg-gray);
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+/* ==================== 通用工具类 ==================== */
+
+/* 文本颜色 */
+.text-primary { color: var(--jc-primary-blue); }
+.text-accent { color: var(--jc-accent-teal); }
+.text-danger { color: var(--jc-danger-red); }
+.text-warning { color: var(--jc-warning-orange); }
+.text-success { color: var(--jc-success-green); }
+.text-muted { color: var(--jc-text-muted); }
+.text-light { color: var(--jc-text-light); }
+
+/* 背景颜色 */
+.bg-primary { background-color: var(--jc-primary-blue); }
+.bg-accent { background-color: var(--jc-accent-teal); }
+.bg-danger { background-color: var(--jc-danger-red); }
+.bg-success { background-color: var(--jc-success-green); }
+.bg-white { background-color: var(--jc-card-white); }
+.bg-gray { background-color: var(--jc-bg-gray); }
+
+/* 字体大小 */
+.font-page-title { font-size: var(--jc-font-size-page-title); font-weight: var(--jc-font-weight-semibold); }
+.font-card-title { font-size: var(--jc-font-size-card-title); font-weight: var(--jc-font-weight-semibold); }
+.font-stat-value { font-size: var(--jc-font-size-stat-value); font-weight: var(--jc-font-weight-bold); }
+.font-body { font-size: var(--jc-font-size-body); }
+.font-small { font-size: var(--jc-font-size-small); }
+.font-meta { font-size: var(--jc-font-size-meta); }
+
+/* 间距工具类 */
+.m-0 { margin: 0; }
+.mt-xs { margin-top: var(--jc-spacing-xs); }
+.mt-sm { margin-top: var(--jc-spacing-sm); }
+.mt-md { margin-top: var(--jc-spacing-md); }
+.mt-lg { margin-top: var(--jc-spacing-lg); }
+.mt-xl { margin-top: var(--jc-spacing-xl); }
+
+.mb-xs { margin-bottom: var(--jc-spacing-xs); }
+.mb-sm { margin-bottom: var(--jc-spacing-sm); }
+.mb-md { margin-bottom: var(--jc-spacing-md); }
+.mb-lg { margin-bottom: var(--jc-spacing-lg); }
+.mb-xl { margin-bottom: var(--jc-spacing-xl); }
+
+.ml-xs { margin-left: var(--jc-spacing-xs); }
+.ml-sm { margin-left: var(--jc-spacing-sm); }
+.ml-md { margin-left: var(--jc-spacing-md); }
+.ml-lg { margin-left: var(--jc-spacing-lg); }
+
+.mr-xs { margin-right: var(--jc-spacing-xs); }
+.mr-sm { margin-right: var(--jc-spacing-sm); }
+.mr-md { margin-right: var(--jc-spacing-md); }
+.mr-lg { margin-right: var(--jc-spacing-lg); }
+
+.p-xs { padding: var(--jc-spacing-xs); }
+.p-sm { padding: var(--jc-spacing-sm); }
+.p-md { padding: var(--jc-spacing-md); }
+.p-lg { padding: var(--jc-spacing-lg); }
+.p-xl { padding: var(--jc-spacing-xl); }
+.p-2xl { padding: var(--jc-spacing-2xl); }
+
+/* Flex 布局 */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
+.flex-1 { flex: 1; }
+.gap-xs { gap: var(--jc-spacing-xs); }
+.gap-sm { gap: var(--jc-spacing-sm); }
+.gap-md { gap: var(--jc-spacing-md); }
+.gap-lg { gap: var(--jc-spacing-lg); }
+.gap-xl { gap: var(--jc-spacing-xl); }
+
+/* 隐藏/显示 */
+.hidden { display: none !important; }
+.visible { display: block; }
+.invisible { visibility: hidden; }
+
+/* 文本对齐 */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+/* 必填项标记 */
+.required::after {
+    content: ' *';
+    color: var(--jc-danger-red);
+    font-weight: var(--jc-font-weight-bold);
+}
+
+/* 禁用状态 */
+.disabled, [disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--jc-bg-gray);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--jc-border-line);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--jc-text-muted);
+}

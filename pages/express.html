@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快递发运 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 快递发运样式"*/
+        .express-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--jc-border-line);
+            margin-bottom: var(--jc-spacing-xl);
+            background: var(--jc-card-white);
+            padding: 0 var(--jc-spacing-xl);
+            border-radius: var(--jc-radius-card) var(--jc-radius-card) 0 0;
+        }
+
+        .express-tab {
+            padding: var(--jc-spacing-md) var(--jc-spacing-xl);
+            font-size: var(--jc-font-size-body);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all var(--jc-transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .express-tab:hover {
+            color: var(--jc-accent-teal);
+        }
+
+        .express-tab.active {
+            color: var(--jc-accent-teal);
+            border-bottom-color: var(--jc-accent-teal);
+        }
+
+        /* 表单卡片 */
+        .express-form-card {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-2xl);
+        }
+
+        .express-form-title {
+            font-size: var(--jc-font-size-card-title);
+            font-weight: var(--jc-font-weight-semibold);
+            margin-bottom: var(--jc-spacing-xl);
+            padding-bottom: var(--jc-spacing-md);
+            border-bottom: 1px solid var(--jc-border-line-light);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .express-form-title i {
+            color: var(--jc-accent-teal);
+        }
+
+        /* 表单网格 */
+        .express-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--jc-spacing-lg);
+        }
+
+        @media (max-width: 768px) {
+            .express-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .express-form-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        .express-form-grid .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* 步骤指示器"*/
+        .express-steps {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--jc-spacing-2xl);
+            padding: var(--jc-spacing-xl);
+            background: var(--jc-bg-gray);
+            border-radius: var(--jc-radius-card);
+        }
+
+        .express-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .express-step-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--jc-card-white);
+            border: 2px solid var(--jc-border-line);
+            color: var(--jc-text-muted);
+            font-size: 20px;
+        }
+
+        .express-step.active .express-step-icon {
+            background: var(--jc-accent-teal);
+            border-color: var(--jc-accent-teal);
+            color: #fff;
+        }
+
+        .express-step.completed .express-step-icon {
+            background: var(--jc-success-green);
+            border-color: var(--jc-success-green);
+            color: #fff;
+        }
+
+        .express-step-label {
+            font-size: 13px;
+            color: var(--jc-text-light);
+        }
+
+        .express-step.active .express-step-label {
+            color: var(--jc-accent-teal);
+            font-weight: var(--jc-font-weight-semibold);
+        }
+
+        .express-step-line {
+            width: 80px;
+            height: 2px;
+            background: var(--jc-border-line);
+            margin: 0 var(--jc-spacing-md);
+            margin-bottom: 24px;
+        }
+
+        .express-step-line.completed {
+            background: var(--jc-success-green);
+        }
+
+        /* 文件上传列表 */
+        .file-upload-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--jc-spacing-md);
+        }
+
+        @media (max-width: 768px) {
+            .file-upload-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .file-upload-item {
+            border: 2px dashed var(--jc-border-line);
+            border-radius: var(--jc-radius-control);
+            padding: var(--jc-spacing-lg);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--jc-transition-fast);
+        }
+
+        .file-upload-item:hover {
+            border-color: var(--jc-accent-teal);
+            background: var(--jc-accent-teal-light);
+        }
+
+        .file-upload-item.has-file {
+            border-color: var(--jc-success-green);
+            background: var(--jc-success-green-light);
+        }
+
+        .file-upload-item i {
+            font-size: 24px;
+            color: var(--jc-text-muted);
+            margin-bottom: var(--jc-spacing-sm);
+        }
+
+        .file-upload-item.has-file i {
+            color: var(--jc-success-green);
+        }
+
+        .file-upload-item-title {
+            font-size: 13px;
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+            margin-bottom: 4px;
+        }
+
+        .file-upload-item-hint {
+            font-size: 12px;
+            color: var(--jc-text-muted);
+        }
+
+        .file-upload-item input[type="file"] {
+            display: none;
+        }
+
+        /* 待办列表 */
+        .express-todo-list {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            margin-top: var(--jc-spacing-xl);
+        }
+
+        .express-todo-item {
+            display: flex;
+            align-items: center;
+            padding: var(--jc-spacing-lg) var(--jc-spacing-xl);
+            border-bottom: 1px solid var(--jc-border-line-light);
+            transition: background var(--jc-transition-fast);
+        }
+
+        .express-todo-item:last-child {
+            border-bottom: none;
+        }
+
+        .express-todo-item:hover {
+            background: var(--jc-bg-gray);
+        }
+
+        .express-todo-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--jc-radius-control);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: var(--jc-spacing-md);
+            font-size: 18px;
+        }
+
+        .express-todo-icon.pending {
+            background: var(--jc-warning-orange-light);
+            color: var(--jc-warning-orange);
+        }
+
+        .express-todo-content {
+            flex: 1;
+        }
+
+        .express-todo-title {
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+            margin-bottom: 4px;
+        }
+
+        .express-todo-meta {
+            font-size: 13px;
+            color: var(--jc-text-light);
+        }
+
+        .express-todo-actions {
+            display: flex;
+            gap: var(--jc-spacing-sm);
+        }
+
+        /* 处理模态框 */
+        .process-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--jc-spacing-lg);
+        }
+
+        @media (max-width: 768px) {
+            .process-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 信息展示 */
+        .info-display {
+            background: var(--jc-bg-gray);
+            border-radius: var(--jc-radius-control);
+            padding: var(--jc-spacing-md) var(--jc-spacing-lg);
+            font-size: 14px;
+            color: var(--jc-text-dark);
+        }
+
+        .info-display-label {
+            font-size: 12px;
+            color: var(--jc-text-light);
+            margin-bottom: 4px;
+        }
+
+        .info-display-value {
+            font-weight: var(--jc-font-weight-semibold);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="../802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="../dashboard.html" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inbound.html" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="outbound.html" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="transfer.html" class="nav-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="query.html" class="nav-link">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inventory.html" class="nav-link planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="express.html" class="nav-link active">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="scrap.html" class="nav-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="qrcode.html" class="nav-link">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="config.html" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="../dashboard.html">首页</a>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current">快递发运</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <!-- 页面标题 -->
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <div>
+                                <h1 class="page-title">快递发运</h1>
+                                <p class="page-description">快递发运申请与处理</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 切换 -->
+                    <div class="express-tabs">
+                        <div class="express-tab active" data-tab="apply" id="applyTabBtn">
+                            <i class="fas fa-edit"></i>
+                            <span>发运申请</span>
+                        </div>
+                        <div class="express-tab" data-tab="process" id="processTabBtn">
+                            <i class="fas fa-tasks"></i>
+                            <span>待办处理</span>
+                            <span class="nav-badge" id="todoBadge">0</span>
+                        </div>
+                        <div class="express-tab" data-tab="history">
+                            <i class="fas fa-history"></i>
+                            <span>发运记录</span>
+                        </div>
+                    </div>
+
+                    <!-- 发运申请 -->
+                    <div class="tab-content active" id="applyTab">
+                        <!-- 步骤指示器 -->
+                        <div class="express-steps">
+                            <div class="express-step active">
+                                <div class="express-step-icon">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                <div class="express-step-label">填写申请</div>
+                            </div>
+                            <div class="express-step-line"></div>
+                            <div class="express-step">
+                                <div class="express-step-icon">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <div class="express-step-label">仓管员处理</div>
+                            </div>
+                            <div class="express-step-line"></div>
+                            <div class="express-step">
+                                <div class="express-step-icon">
+                                    <i class="fas fa-shipping-fast"></i>
+                                </div>
+                                <div class="express-step-label">发运完成</div>
+                            </div>
+                        </div>
+
+                        <div class="express-form-card">
+                            <div class="express-form-title">
+                                <i class="fas fa-file-alt"></i>
+                                发运申请信息
+                            </div>
+                            <form id="expressForm">
+                                <div class="express-form-grid" id="express-form">
+                                    <!-- 外发日期 -->
+                                    <div class="form-group">
+                                        <label class="form-label">外发日期</label>
+                                        <input type="text" class="form-control" id="shipDate" readonly title="系统自动生成">
+                                    </div>
+
+                                    <!-- PBU -->
+                                    <div class="form-group">
+                                        <label class="form-label">PBU</label>
+                                        <input type="text" class="form-control" id="pbuField" readonly title="根据登录账号自动匹配">
+                                    </div>
+
+                                    <!-- 物料描述 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">物料描述</label>
+                                        <input type="text" class="form-control" name="materialDesc" placeholder="请输入外发物料的详细描述" required>
+                                    </div>
+
+                                    <!-- 发运原因 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">发运原因</label>
+                                        <input type="text" class="form-control" name="shipReason" placeholder="请输入发运原因" required>
+                                    </div>
+
+                                    <!-- 发运包装 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">发运包装</label>
+                                        <select class="form-control" name="shipPackage" required>
+                                            <option value="">请选择包装类型</option>
+                                            <option value="纸箱">纸箱</option>
+                                            <option value="木箱">木箱</option>
+                                            <option value="托盘">托盘</option>
+                                            <option value="文件被">文件被</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 收件了 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">收件了</label>
+                                        <input type="text" class="form-control" name="recipient" placeholder="请输入收件人姓名" required>
+                                    </div>
+
+                                    <!-- 收件人电请 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">收件人电请</label>
+                                        <input type="tel" class="form-control" name="recipientPhone" id="recipientPhone" placeholder="请输入11位手机号" required>
+                                    </div>
+
+                                    <!-- 收货地址 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">收货地址</label>
+                                        <input type="text" class="form-control" name="address" placeholder="请输入完整收货地址" required>
+                                    </div>
+
+                                    <!-- 运费项目号"成本中心 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">运费项目号"成本中心</label>
+                                        <input type="text" class="form-control" name="costCenter" placeholder="请输入成本中心代码" required>
+                                    </div>
+
+                                    <!-- 备注 -->
+                                    <div class="form-group" style="grid-column: span 1;">
+                                        <label class="form-label">备注</label>
+                                        <input type="text" class="form-control" name="remark" placeholder="其它特殊要求填写 (选填)">
+                                    </div>
+                                </div>
+
+                                <div class="form-actions" style="margin-top: var(--jc-spacing-xl);">
+                                    <button type="submit" class="btn btn-primary" id="submitExpressBtn">
+                                        <i class="fas fa-paper-plane"></i> 提交申请
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="resetExpressBtn">
+                                        <i class="fas fa-undo"></i> 重置
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 待办处理 -->
+                    <div class="tab-content" id="processTab">
+                        <div class="express-todo-list" id="expressTodoList">
+                            <!-- 动态生或 -->
+                        </div>
+                    </div>
+
+                    <!-- 发运记录 -->
+                    <div class="tab-content" id="historyTab">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-list"></i>
+                                    发运记录
+                                </div>
+                            </div>
+                            <div class="card-body" style="padding: 0;">
+                                <div class="table-container">
+                                    <table class="table" id="expressHistoryTable">
+                                        <thead>
+                                            <tr>
+                                                <th>发运单号</th>
+                                                <th>物料描述</th>
+                                                <th>发运原因</th>
+                                                <th>收件了</th>
+                                                <th>快递单号</th>
+                                                <th>重量</th>
+                                                <th>件数</th>
+                                                <th>金额</th>
+                                                <th>状态</th>
+                                                <th>申请时间</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 处理模态框 -->
+    <div class="modal-backdrop" id="processModalBackdrop" onclick="closeProcessModal()"></div>
+    <div class="modal" id="processModal" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h5 class="modal-title">处理快递发运</h5>
+                <button class="modal-close" onclick="closeProcessModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="processForm">
+                    <div class="process-form-grid">
+                        <div class="form-group full-width">
+                            <div class="info-display">
+                                <div class="info-display-label">物料描述</div>
+                                <div class="info-display-value" id="processMaterialDesc">-</div>
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <div class="info-display">
+                                <div class="info-display-label">收货地址</div>
+                                <div class="info-display-value" id="processAddress">-</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">快递单号</label>
+                            <input type="text" class="form-control" name="trackingNumber" placeholder="请输入快递单号" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">重量(kg)</label>
+                            <input type="number" class="form-control" name="weight" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">件数</label>
+                            <input type="number" class="form-control" name="pieces" placeholder="1" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">金额(入"</label>
+                            <input type="number" class="form-control" name="amount" placeholder="0.00" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: var(--jc-spacing-xl);">
+                        <label class="form-label required">文件上传</label>
+                        <div class="file-upload-grid">
+                            <div class="file-upload-item" onclick="document.getElementById('file1').click()">
+                                <input type="file" id="file1" accept=".pdf,.jpg,.png" onchange="handleFileSelect(this, '快递费用审批邮件')">
+                                <i class="fas fa-file-invoice"></i>
+                                <div class="file-upload-item-title">快递费用审批邮件</div>
+                                <div class="file-upload-item-hint">点击上传</div>
+                            </div>
+                            <div class="file-upload-item" onclick="document.getElementById('file2').click()">
+                                <input type="file" id="file2" accept=".xlsx,.xls" onchange="handleFileSelect(this, '快递费用明细清单')">
+                                <i class="fas fa-file-excel"></i>
+                                <div class="file-upload-item-title">快递费用明细清单</div>
+                                <div class="file-upload-item-hint">点击上传</div>
+                            </div>
+                            <div class="file-upload-item" onclick="document.getElementById('file3').click()">
+                                <input type="file" id="file3" accept=".xlsx,.xls" onchange="handleFileSelect(this, 'SAP YRP 会计模板')">
+                                <i class="fas fa-file-excel"></i>
+                                <div class="file-upload-item-title">SAP YRP 会计模板</div>
+                                <div class="file-upload-item-hint">点击上传</div>
+                            </div>
+                            <div class="file-upload-item" onclick="document.getElementById('file4').click()">
+                                <input type="file" id="file4" accept=".pdf,.jpg,.png" onchange="handleFileSelect(this, '发票')">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                <div class="file-upload-item-title">发票</div>
+                                <div class="file-upload-item-hint">点击上传</div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeProcessModal()">取消</button>
+                <button class="btn btn-primary" id="confirmProcessBtn">
+                    <i class="fas fa-check"></i> 确认处理
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/data.js"></script>
+    <script>
+        // 检查登录状态 
+        if (!Users.isLoggedIn()) {
+            window.location.href = '../index.html';
+        }
+
+        let currentProcessId = null;
+        const uploadedFiles = {};
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                document.getElementById('pbuField').value = user.department || 'PBU-A';
+                document.getElementById('shipDate').value = DateUtils.now('YYYY-MM-DD');
+                
+                const roleMap = {
+                    admin: '系统管理员',
+                    keeper: '仓管员',
+                    engineer: '工程师'
+                };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+                
+                // 根据角色显示不同Tab
+                if (user.role === 'keeper' || user.role === 'admin') {
+                    document.getElementById('processTabBtn').style.display = 'flex';
+                } else {
+                    document.getElementById('processTabBtn').style.display = 'none';
+                }
+            }
+        }
+
+        // Tab 切换
+        document.querySelectorAll('.express-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.dataset.tab;
+                
+                document.querySelectorAll('.express-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(targetTab + 'Tab').classList.add('active');
+                
+                if (targetTab === 'process') {
+                    loadTodoList();
+                } else if (targetTab === 'history') {
+                    loadHistory();
+                }
+            });
+        });
+
+        // 提交发运申请
+        document.getElementById('expressForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formContainer = document.getElementById('express-form');
+            const requiredInputs = formContainer.querySelectorAll('input[required], select[required]');
+            let isValid = true;
+            
+            const phoneInput = document.getElementById('recipientPhone');
+            
+            requiredInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.style.borderColor = 'var(--jc-danger-red)';
+                } else {
+                    input.style.borderColor = '';
+                }
+            });
+
+            if (phoneInput && phoneInput.value.trim()) {
+                if (!/^1[3-9]\d{9}$/.test(phoneInput.value.trim())) {
+                    isValid = false;
+                    phoneInput.style.borderColor = 'var(--jc-danger-red)';
+                    Toast.error('请输入正确的11位手机号）');
+                    return;
+                }
+            }
+
+            if (!isValid) {
+                Toast.error('请完整正确填写带红星的必填信息！');
+                return;
+            }
+
+            const btn = document.getElementById('submitExpressBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交流转中...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const formData = {
+                    shipDate: document.getElementById('shipDate').value,
+                    pbu: document.getElementById('pbuField').value,
+                    materialDesc: formContainer.querySelector('[name="materialDesc"]').value,
+                    shipReason: formContainer.querySelector('[name="shipReason"]').value,
+                    shipPackage: formContainer.querySelector('[name="shipPackage"]').value,
+                    recipient: formContainer.querySelector('[name="recipient"]').value,
+                    recipientPhone: formContainer.querySelector('[name="recipientPhone"]').value,
+                    address: formContainer.querySelector('[name="address"]').value,
+                    costCenter: formContainer.querySelector('[name="costCenter"]').value,
+                    remark: formContainer.querySelector('[name="remark"]')?.value || ''
+                };
+                
+                const flow = Flows.create('express', formData);
+                
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                Toast.success('快递发运申请已成功流转至仓管员）');
+                
+                // 清空表单（保留只读字段）
+                requiredInputs.forEach(input => input.value = '');
+                formContainer.querySelector('[name="remark"]').value = '';
+                document.getElementById('shipDate').value = DateUtils.now('YYYY-MM-DD');
+                document.getElementById('pbuField').value = Users.getCurrentUser()?.department || 'PBU-A';
+            }, 800);
+        });
+
+        // 重置表单
+        document.getElementById('resetExpressBtn').addEventListener('click', function() {
+            const formContainer = document.getElementById('express-form');
+            formContainer.querySelectorAll('input:not([readonly]), select').forEach(el => {
+                el.value = '';
+                el.style.borderColor = '';
+            });
+        });
+
+        // 加载待办列表
+        function loadTodoList() {
+            const todos = Flows.getPending().filter(f => f.type === 'express');
+            document.getElementById('todoBadge').textContent = todos.length;
+            
+            const container = document.getElementById('expressTodoList');
+            
+            if (todos.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px; color: var(--jc-text-muted);">
+                        <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                        <p>暂无待处理的发运申请</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = todos.map(todo => `
+                <div class="express-todo-item">
+                    <div class="express-todo-icon pending">
+                        <i class="fas fa-shipping-fast"></i>
+                    </div>
+                    <div class="express-todo-content">
+                        <div class="express-todo-title">${todo.flowNo} - ${todo.data.materialDesc}</div>
+                        <div class="express-todo-meta">
+                            发运原因：${todo.data.shipReason} |
+                            收件人：${todo.data.recipient} | 
+                            申请时间：${DateUtils.format(todo.createTime, 'YYYY-MM-DD HH:mm')}
+                        </div>
+                    </div>
+                    <div class="express-todo-actions">
+                        <button class="btn btn-primary btn-sm" onclick="openProcessModal(${todo.id})">
+                            <i class="fas fa-edit"></i> 处理
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 打开处理模态框
+        function openProcessModal(flowId) {
+            const flow = Flows.getAll().find(f => f.id === flowId);
+            if (!flow) return;
+            
+            currentProcessId = flowId;
+            document.getElementById('processMaterialDesc').textContent = flow.data.materialDesc;
+            document.getElementById('processAddress').textContent = flow.data.address;
+            
+            const modal = document.getElementById('processModal');
+            const backdrop = document.getElementById('processModalBackdrop');
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+                backdrop.classList.add('show');
+            });
+        }
+
+        // 关闭处理模态框
+        function closeProcessModal() {
+            const modal = document.getElementById('processModal');
+            const backdrop = document.getElementById('processModalBackdrop');
+            modal.classList.remove('show');
+            backdrop.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                document.getElementById('processForm').reset();
+                currentProcessId = null;
+                
+                // 重置文件上传状态 
+                document.querySelectorAll('.file-upload-item').forEach(item => {
+                    item.classList.remove('has-file');
+                    item.querySelector('.file-upload-item-hint').textContent = '点击上传';
+                });
+                Object.keys(uploadedFiles).forEach(key => delete uploadedFiles[key]);
+            }, 300);
+        }
+
+        // 文件选择处理
+        function handleFileSelect(input, fileName) {
+            if (input.files.length > 0) {
+                const item = input.closest('.file-upload-item');
+                item.classList.add('has-file');
+                item.querySelector('.file-upload-item-hint').textContent = input.files[0].name;
+                uploadedFiles[fileName] = input.files[0];
+            }
+        }
+
+        // 确认处理
+        document.getElementById('confirmProcessBtn').addEventListener('click', function() {
+            const form = document.getElementById('processForm');
+            const trackingNumber = form.querySelector('[name="trackingNumber"]').value;
+            const weight = form.querySelector('[name="weight"]').value;
+            const pieces = form.querySelector('[name="pieces"]').value;
+            const amount = form.querySelector('[name="amount"]').value;
+            
+            let isValid = true;
+            [form.querySelector('[name="trackingNumber"]'), form.querySelector('[name="weight"]'), 
+             form.querySelector('[name="pieces"]'), form.querySelector('[name="amount"]')].forEach(input => {
+                if (!input.value.trim()) {
+                    isValid = false;
+                    input.style.borderColor = 'var(--jc-danger-red)';
+                } else {
+                    input.style.borderColor = '';
+                }
+            });
+            
+            if (!isValid) {
+                Toast.error('请填写所有必填项');
+                return;
+            }
+            
+            // 校验文件上传
+            const requiredFiles = ['快递费用审批邮件', '快递费用明细清单', 'SAP YRP 会计模板', '发票'];
+            const missingFiles = requiredFiles.filter(f => !uploadedFiles[f]);
+            if (missingFiles.length > 0) {
+                Toast.error(`请补充完整的必填信息及附件！缺失：${missingFiles.join('、')}`);
+                return;
+            }
+            
+            const btn = document.getElementById('confirmProcessBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 流程确认中...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                // 更新流程
+                const flow = Flows.getAll().find(f => f.id === currentProcessId);
+                if (flow) {
+                    flow.data.trackingNumber = trackingNumber;
+                    flow.data.weight = weight;
+                    flow.data.pieces = pieces;
+                    flow.data.amount = amount;
+                    Flows.complete(currentProcessId);
+                }
+                
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                Toast.success('发运操作完成：快递单号与凭证已归档！');
+                closeProcessModal();
+                loadTodoList();
+                loadHistory();
+            }, 800);
+        });
+
+        // 加载历史记录
+        function loadHistory() {
+            const flows = Flows.getAll().filter(f => f.type === 'express').slice(-10).reverse();
+            const tbody = document.querySelector('#expressHistoryTable tbody');
+            
+            if (flows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center" style="padding: 40px;">暂无发运记录</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = flows.map(flow => `
+                <tr>
+                    <td>${flow.flowNo}</td>
+                    <td>${flow.data.materialDesc}</td>
+                    <td>${flow.data.shipReason}</td>
+                    <td>${flow.data.recipient}</td>
+                    <td>${flow.data.trackingNumber || '-'}</td>
+                    <td>${flow.data.weight || '-'} kg</td>
+                    <td>${flow.data.pieces || '-'}</td>
+                    <td>¥${flow.data.amount || '-'}</td>
+                    <td>
+                        <span class="status-tag ${flow.status === 'completed' ? 'completed' : 'pending'}">
+                            ${flow.status === 'completed' ? '已完成' : '处理中'}
+                        </span>
+                    </td>
+                    <td>${DateUtils.format(flow.createTime, 'YYYY-MM-DD HH:mm')}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 侧边栏折叠 
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // 退出登录 
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 500);
+            });
+        });
+
+        // 初始区 
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+        });
+    </script>
+</body>
+</html>

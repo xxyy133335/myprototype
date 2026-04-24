@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出库管理 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Tab 样式 */
+        .outbound-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--jc-border-line);
+            margin-bottom: var(--jc-spacing-xl);
+            background: var(--jc-card-white);
+            padding: 0 var(--jc-spacing-xl);
+            border-radius: var(--jc-radius-card) var(--jc-radius-card) 0 0;
+        }
+
+        .outbound-tab {
+            padding: var(--jc-spacing-md) var(--jc-spacing-xl);
+            font-size: var(--jc-font-size-body);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all var(--jc-transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .outbound-tab:hover {
+            color: var(--jc-accent-teal);
+        }
+
+        .outbound-tab.active {
+            color: var(--jc-accent-teal);
+            border-bottom-color: var(--jc-accent-teal);
+        }
+
+        /* 领用出库 - 双栏布局 */
+        .outbound-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: var(--jc-spacing-xl);
+        }
+
+        @media (max-width: 1200px) {
+            .outbound-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 搜索区域 */
+        .search-section {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-xl);
+            margin-bottom: var(--jc-spacing-lg);
+        }
+
+        .search-filters {
+            display: flex;
+            gap: var(--jc-spacing-md);
+            flex-wrap: wrap;
+        }
+
+        .search-filters .form-group {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 0;
+        }
+
+        /* 库存表格 */
+        .inventory-table {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            overflow: hidden;
+        }
+
+        .inventory-table .table {
+            font-size: 13px;
+        }
+
+        .inventory-table .table th,
+        .inventory-table .table td {
+            padding: 10px 12px;
+            white-space: nowrap;
+        }
+
+        .inventory-table .table tbody tr {
+            cursor: pointer;
+        }
+
+        .inventory-table .table tbody tr:hover {
+            background: var(--jc-accent-teal-light);
+        }
+
+        .inventory-table .table tbody tr.selected {
+            background: var(--jc-accent-teal-light);
+        }
+
+        /* 数量输入 */
+        .qty-input {
+            width: 80px;
+            padding: 6px 10px;
+            border: 1px solid var(--jc-border-line);
+            border-radius: var(--jc-radius-control);
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .qty-input:focus {
+            border-color: var(--jc-accent-teal);
+            outline: none;
+        }
+
+        /* 购物载"*/
+        .cart-section {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 200px);
+        }
+
+        .cart-header {
+            padding: var(--jc-spacing-lg) var(--jc-spacing-xl);
+            border-bottom: 1px solid var(--jc-border-line-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cart-title {
+            font-size: var(--jc-font-size-card-title);
+            font-weight: var(--jc-font-weight-semibold);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .cart-title i {
+            color: var(--jc-accent-teal);
+        }
+
+        .cart-badge {
+            background: var(--jc-danger-red);
+            color: #fff;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: var(--jc-font-weight-bold);
+        }
+
+        .cart-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--jc-spacing-md);
+        }
+
+        .cart-empty {
+            text-align: center;
+            padding: var(--jc-spacing-3xl) var(--jc-spacing-xl);
+            color: var(--jc-text-muted);
+        }
+
+        .cart-empty i {
+            font-size: 48px;
+            margin-bottom: var(--jc-spacing-md);
+            opacity: 0.5;
+        }
+
+        .cart-item {
+            background: var(--jc-bg-gray);
+            border-radius: var(--jc-radius-control);
+            padding: var(--jc-spacing-md);
+            margin-bottom: var(--jc-spacing-md);
+        }
+
+        .cart-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--jc-spacing-sm);
+        }
+
+        .cart-item-name {
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+            font-size: 14px;
+        }
+
+        .cart-item-remove {
+            color: var(--jc-danger-red);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .cart-item-info {
+            font-size: 12px;
+            color: var(--jc-text-light);
+            margin-bottom: var(--jc-spacing-xs);
+        }
+
+        .cart-item-qty {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: var(--jc-spacing-sm);
+        }
+
+        .cart-item-qty-label {
+            font-size: 13px;
+            color: var(--jc-text-light);
+        }
+
+        .cart-item-qty-value {
+            font-weight: var(--jc-font-weight-bold);
+            color: var(--jc-accent-teal);
+            font-size: 16px;
+        }
+
+        .cart-footer {
+            padding: var(--jc-spacing-lg) var(--jc-spacing-xl);
+            border-top: 1px solid var(--jc-border-line-light);
+            background: var(--jc-bg-gray);
+        }
+
+        .cart-summary {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--jc-spacing-md);
+            font-size: 14px;
+        }
+
+        .cart-summary-label {
+            color: var(--jc-text-light);
+        }
+
+        .cart-summary-value {
+            font-weight: var(--jc-font-weight-bold);
+            color: var(--jc-text-dark);
+        }
+
+        .cart-actions .btn {
+            width: 100%;
+        }
+
+        /* 审批信息 */
+        .approval-info {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-xl);
+            margin-top: var(--jc-spacing-lg);
+        }
+
+        .approval-title {
+            font-size: var(--jc-font-size-card-title);
+            font-weight: var(--jc-font-weight-semibold);
+            margin-bottom: var(--jc-spacing-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .approval-title i {
+            color: var(--jc-accent-teal);
+        }
+
+        /* 报废出库特有样式 - 上下全宽布局 */
+        .scrap-vertical-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .scrap-block {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scrap-block-header {
+            padding: 15px;
+            background: #fdfdfd;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .scrap-block-header-blue {
+            padding: 12px 15px;
+            background: #E3F2FD;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            color: var(--jc-accent-teal);
+            font-size: 14px;
+        }
+
+        .scrap-block-header-red {
+            padding: 12px 15px;
+            background: #FFF3E0;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            color: var(--jc-danger-red);
+            font-size: 14px;
+        }
+
+        .req-form-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--jc-spacing-lg);
+            margin-bottom: 15px;
+        }
+
+        .scrap-table-container {
+            flex: 1;
+            min-height: 200px;
+            max-height: 300px;
+            overflow: auto;
+            border: none;
+        }
+
+        .scrap-cart-container {
+            flex: 1;
+            min-height: 150px;
+            max-height: 250px;
+            overflow: auto;
+            border: none;
+        }
+
+        .scrap-form-footer {
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+
+        .scrap-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: var(--jc-spacing-lg);
+            margin-bottom: 15px;
+        }
+
+        .scrap-submit-row {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .scrap-data-table {
+            font-size: 13px;
+        }
+
+        .scrap-data-table th,
+        .scrap-data-table td {
+            padding: 8px 12px;
+            white-space: nowrap;
+        }
+
+        .scrap-sticky-qty {
+            position: sticky;
+            right: 60px;
+            background: #F8FAFC;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            min-width: 80px;
+        }
+
+        .scrap-sticky-op {
+            position: sticky;
+            right: 0;
+            background: #F8FAFC;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .scrap-cart-sticky-op {
+            position: sticky;
+            right: 0;
+            background: #fff;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            min-width: 50px;
+            text-align: center;
+        }
+
+        /* 库存检索结析"*/
+        .stock-highlight {
+            color: var(--jc-success-green);
+            font-weight: var(--jc-font-weight-bold);
+        }
+
+        .stock-low {
+            color: var(--jc-danger-red);
+            font-weight: var(--jc-font-weight-bold);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="../802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="../dashboard.html" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inbound.html" class="nav-link">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="outbound.html" class="nav-link active">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="transfer.html" class="nav-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="query.html" class="nav-link">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inventory.html" class="nav-link planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="express.html" class="nav-link">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="scrap.html" class="nav-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="qrcode.html" class="nav-link">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="config.html" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="../dashboard.html">首页</a>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current">出库管理</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <!-- 页面标题 -->
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <div>
+                                <h1 class="page-title">出库管理</h1>
+                                <p class="page-description">领用出库与报废出库管理</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 切换 -->
+                    <div class="outbound-tabs">
+                        <div class="outbound-tab active" data-tab="request">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>领用出库</span>
+                        </div>
+                        <div class="outbound-tab" data-tab="scrap">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>报废出库</span>
+                        </div>
+                    </div>
+
+                    <!-- 领用出库 -->
+                    <div class="tab-content active" id="requestTab">
+                        <div class="scrap-vertical-layout">
+
+                            <!-- 区块一：库存检索 -->
+                            <div class="scrap-block">
+                                <div class="scrap-block-header">
+                                    <input type="text" class="form-control" id="searchKeyword" placeholder="模糊查询: 物料名称或编号  style="flex: 1;">
+                                    <button class="btn btn-primary" id="searchBtn" style="margin: 0;">
+                                        <i class="fas fa-search"></i> 查库存 
+                                    </button>
+                                </div>
+                                <div class="scrap-table-container">
+                                    <table class="table scrap-data-table" id="inventoryTable">
+                                        <thead>
+                                            <tr>
+                                                <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>原入库数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th>
+                                                <th class="scrap-sticky-qty">领用数量</th>
+                                                <th class="scrap-sticky-op">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="reqSearchResults">
+                                            <tr><td colspan="22" style="text-align:center;color:#999;padding:20px;">请输入关键词后点击查库存，或直接点击查库存显示全部</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- 区块二：待领用清单 -->
+                            <div class="scrap-block">
+                                <div class="scrap-block-header-blue">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    待领用清单"(<span id="cartCount">0</span>)
+                                </div>
+                                <div class="scrap-cart-container">
+                                    <table class="table scrap-data-table" id="reqCartTable">
+                                        <thead>
+                                            <tr>
+                                                <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th style="color:var(--jc-accent-teal);">领出数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>领前库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th>
+                                                <th class="scrap-cart-sticky-op">移除</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="reqCartBody">
+                                            <tr><td colspan="21" style="text-align:center;color:#999;padding:20px;">请从上方库存检索区添加需要领用的物料</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- 底部表单区 -->
+                                <div class="scrap-form-footer">
+                                    <div class="req-form-grid">
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label class="form-label required">领料原因 / 用选</label>
+                                            <textarea class="form-control" id="reqReason" rows="2" placeholder="如：用于新项目研发测试使申..." required style="resize: none;"></textarea>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label class="form-label">审批经理 (系统自动匹配)</label>
+                                            <input type="text" class="form-control" id="approverName" readonly style="background:#e9ecef;color:#666;cursor:not-allowed;">
+                                        </div>
+                                    </div>
+                                    <div class="scrap-submit-row">
+                                        <button class="btn btn-primary" id="submitOutboundBtn" style="padding: 10px 30px; font-size: 14px;">
+                                            <i class="fas fa-paper-plane"></i> 提交领用并流转审批 
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- 报废出库 -->
+                    <div class="tab-content" id="scrapTab">
+                        <div class="scrap-vertical-layout">
+
+                            <!-- 区块一：库存检索 -->
+                            <div class="scrap-block">
+                                <div class="scrap-block-header">
+                                    <input type="text" class="form-control" id="scrapSearchKeyword" placeholder="模糊查询: 需报废的物料名称或编号" style="flex: 1;">
+                                    <button class="btn btn-primary" id="scrapSearchBtn" style="margin: 0;">
+                                        <i class="fas fa-search"></i> 查库存 
+                                    </button>
+                                </div>
+                                <div class="scrap-table-container">
+                                    <table class="table scrap-data-table" id="scrapInventoryTable">
+                                        <thead>
+                                            <tr>
+                                                <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th>原入库数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>剩余库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th>
+                                                <th class="scrap-sticky-qty">报废数量</th>
+                                                <th class="scrap-sticky-op">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="scrapSearchResults">
+                                            <tr><td colspan="22" style="text-align:center;color:#999;padding:20px;">请输入关键词后点击查库存，或直接点击查库存显示全部</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- 区块二：待报废清单 -->
+                            <div class="scrap-block">
+                                <div class="scrap-block-header-red">
+                                    <i class="fas fa-trash-alt"></i>
+                                    待报废清单"(<span id="scrapCartCount">0</span>)
+                                </div>
+                                <div class="scrap-cart-container">
+                                    <table class="table scrap-data-table" id="scrapCartTable">
+                                        <thead>
+                                            <tr>
+                                                <th>物料名称</th><th>物料编号</th><th>申请人</th><th>项目编号</th><th>PBU</th><th>免3C</th><th>物料类别</th><th>所属人</th><th>所属部门</th><th>PO号</th><th>供应商编号</th><th style="color:var(--jc-danger-red);">报废数量</th><th>单位</th><th>入库时间</th><th>入库单号</th><th>报前库存</th><th>账龄周期</th><th>呆滞周期</th><th>仓库</th><th>货位</th>
+                                                <th class="scrap-cart-sticky-op">移除</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="scrapCartBody">
+                                            <tr><td colspan="21" style="text-align:center;color:#999;padding:20px;">请从上方库存检索区添加需要报废的物料</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- 底部表单区 -->
+                                <div class="scrap-form-footer">
+                                    <div class="scrap-form-grid">
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label class="form-label required">报废单号</label>
+                                            <input type="text" class="form-control" id="scrapOrderNo" placeholder="请填写关联的报废单号" required>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label class="form-label required">上传报废凭证</label>
+                                            <input type="file" class="form-control" id="scrapFiles" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" required>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label class="form-label">审批经理 (系统自动匹配)</label>
+                                            <input type="text" class="form-control" id="scrapApprover" readonly style="background:#e9ecef;color:#666;cursor:not-allowed;">
+                                        </div>
+                                    </div>
+                                    <div class="scrap-submit-row">
+                                        <button class="btn btn-danger" id="submitScrapBtn" style="padding: 10px 30px; font-size: 14px;">
+                                            <i class="fas fa-paper-plane"></i> 提交报废并流转审批 
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/data.js"></script>
+    <script>
+        // 检查登录状态 
+        if (!Users.isLoggedIn()) {
+            window.location.href = '../index.html';
+        }
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                document.getElementById('approverName').value = user.manager || '待分配';
+                document.getElementById('scrapApprover').value = user.manager || '待分配';
+                const roleMap = { admin: '系统管理员', keeper: '仓管员', engineer: '工程师' };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+            }
+        }
+
+        // Tab 切换
+        document.querySelectorAll('.outbound-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.dataset.tab;
+                document.querySelectorAll('.outbound-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(targetTab + 'Tab').classList.add('active');
+            });
+        });
+
+        let reqCart = [];
+
+        // 渲染库存检索结析 
+        function renderReqSearch(query) {
+            const inventory = Inventory.getAll().filter(item => item.remainingStock > 0);
+            const tbody = document.getElementById('reqSearchResults');
+            query = (query || '').trim().toLowerCase();
+
+            const filtered = query
+                ? inventory.filter(item =>
+                    item.materialName.toLowerCase().includes(query) ||
+                    (item.materialCode && item.materialCode.toLowerCase().includes(query))
+                  )
+                : inventory;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="22" style="text-align:center;color:#999;padding:20px;">未搜索到匹配的物料库存</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, index) => `
+                <tr>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.applicant || '-'}</td>
+                    <td>${item.projectCode || '-'}</td>
+                    <td>${item.pbu || '-'}</td>
+                    <td>${item.exempt3C || '-'}</td>
+                    <td>${item.materialCategory || '-'}</td>
+                    <td>${item.owner || '-'}</td>
+                    <td>${item.department || '-'}</td>
+                    <td>${item.poNumber || '-'}</td>
+                    <td>${item.supplierCode || '-'}</td>
+                    <td>${item.quantity || '-'}</td>
+                    <td>${item.unit || '-'}</td>
+                    <td>${item.inboundTime || '-'}</td>
+                    <td>${item.inboundNo || '-'}</td>
+                    <td><span style="color:var(--jc-success-green);font-weight:600;">${item.remainingStock}</span></td>
+                    <td>${item.ageingDays ? item.ageingDays + '天' : '-'}</td>
+                    <td>${item.deadstockDays ? item.deadstockDays + '天' : '-'}</td>
+                    <td>${item.warehouse || '-'}</td>
+                    <td>${item.location || '-'}</td>
+                    <td class="scrap-sticky-qty">
+                        <input type="number" id="req-qty-${index}" class="qty-input" style="width:60px;"
+                               min="1" max="${item.remainingStock}" value="1"
+                               data-max="${item.remainingStock}">
+                    </td>
+                    <td class="scrap-sticky-op">
+                        <button class="btn btn-primary btn-sm" onclick="addToReqCart(${index})" style="padding:4px 8px;font-size:12px;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            window._reqSearchFiltered = filtered;
+        }
+
+        // 搜索按钮事件
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            renderReqSearch(document.getElementById('searchKeyword').value);
+        });
+
+        // Enter 键触发搜索 
+        document.getElementById('searchKeyword').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') renderReqSearch(this.value);
+        });
+
+        // 初始加载全部库存
+        function loadInventory() {
+            renderReqSearch('');
+        }
+
+        // 添加到领用购物车
+        function addToReqCart(rowIndex) {
+            const filtered = window._reqSearchFiltered || Inventory.getAll().filter(item => item.remainingStock > 0);
+            const item = filtered[rowIndex];
+            if (!item) return;
+
+            const qtyInput = document.getElementById(`req-qty-${rowIndex}`);
+            const qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
+
+            if (isNaN(qty) || qty <= 0 || qty > item.remainingStock) {
+                Toast.error('库存不足或输入数量无效！');
+                return;
+            }
+
+            const existing = reqCart.find(c => c.inboundNo === item.inboundNo);
+            if (existing) {
+                if (existing.reqQty + qty > item.remainingStock) {
+                    Toast.error(`合并失败：超出现有可用库存总上陙"(${item.remainingStock})！`);
+                    return;
+                }
+                existing.reqQty += qty;
+            } else {
+                reqCart.push({ ...item, reqQty: qty });
+            }
+
+            renderReqCart();
+            Toast.success(`已添办 ${qty} ${item.unit || ''} [${item.materialName}] 到领用购物车`);
+        }
+
+        // 渲染领用购物车表栏 
+        function renderReqCart() {
+            const tbody = document.getElementById('reqCartBody');
+            const countEl = document.getElementById('cartCount');
+            countEl.textContent = reqCart.length;
+
+            if (reqCart.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;color:#999;padding:20px;">请从上方库存检索区添加需要领用的物料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = reqCart.map((item, index) => `
+                <tr>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.applicant || '-'}</td>
+                    <td>${item.projectCode || '-'}</td>
+                    <td>${item.pbu || '-'}</td>
+                    <td>${item.exempt3C || '-'}</td>
+                    <td>${item.materialCategory || '-'}</td>
+                    <td>${item.owner || '-'}</td>
+                    <td>${item.department || '-'}</td>
+                    <td>${item.poNumber || '-'}</td>
+                    <td>${item.supplierCode || '-'}</td>
+                    <td><strong style="color:var(--jc-accent-teal);">${item.reqQty}</strong></td>
+                    <td>${item.unit || '-'}</td>
+                    <td>${item.inboundTime || '-'}</td>
+                    <td>${item.inboundNo || '-'}</td>
+                    <td>${item.remainingStock}</td>
+                    <td>${item.ageingDays ? item.ageingDays + '天' : '-'}</td>
+                    <td>${item.deadstockDays ? item.deadstockDays + '天' : '-'}</td>
+                    <td>${item.warehouse || '-'}</td>
+                    <td>${item.location || '-'}</td>
+                    <td class="scrap-cart-sticky-op">
+                        <i class="fas fa-trash-alt" style="color:var(--jc-danger-red);cursor:pointer;font-size:14px;"
+                           onclick="removeFromReqCart(${index})" title="移除"></i>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 从领用购物车移除
+        function removeFromReqCart(index) {
+            reqCart.splice(index, 1);
+            renderReqCart();
+        }
+
+        // 提交领用申请
+        document.getElementById('submitOutboundBtn').addEventListener('click', function() {
+            if (reqCart.length === 0) {
+                Toast.error('领用清单为空，请先从上方检索并添加物料）');
+                return;
+            }
+
+            const reasonEl = document.getElementById('reqReason');
+            if (!reasonEl.value.trim()) {
+                Toast.error('请务必填写领料原图"用途，以供审批）');
+                reasonEl.style.borderColor = 'var(--jc-danger-red)';
+                reasonEl.focus();
+                return;
+            } else {
+                reasonEl.style.borderColor = '';
+            }
+
+            const btn = this;
+            ButtonUtils.setLoading(btn, '系统流转处理中...');
+
+            const user = Users.getCurrentUser();
+            const formData = {
+                items: reqCart,
+                reason: reasonEl.value.trim(),
+                applicant: user ? user.name : '未知',
+                department: user ? (user.department || '') : '',
+                approver: document.getElementById('approverName').value
+            };
+
+            setTimeout(() => {
+                const flow = Flows.create('outbound_request', formData);
+                ButtonUtils.setSuccess(btn, '提交成功');
+                Toast.success(`领用出库升 ${flow.flowNo} 已成功提交至您的部门经理进行审批！`);
+
+                reqCart = [];
+                renderReqCart();
+                reasonEl.value = '';
+
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> 提交领用并流转审批';
+                    btn.disabled = false;
+                }, 2000);
+            }, 800);
+        });
+
+        // ================= 报废出库 (购物车流转模式  =================
+        let scrapCart = [];
+
+        // 渲染库存检索结析 
+        function renderScrapSearch(query) {
+            const inventory = Inventory.getAll();
+            const tbody = document.getElementById('scrapSearchResults');
+            query = (query || '').trim().toLowerCase();
+
+            const filtered = query
+                ? inventory.filter(item =>
+                    item.materialName.toLowerCase().includes(query) ||
+                    (item.materialCode && item.materialCode.toLowerCase().includes(query))
+                  )
+                : inventory;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="22" style="text-align:center;color:#999;padding:20px;">未搜索到匹配的物料库存</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((item, index) => `
+                <tr>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.applicant || '-'}</td>
+                    <td>${item.projectCode || '-'}</td>
+                    <td>${item.pbu || '-'}</td>
+                    <td>${item.exempt3C || '-'}</td>
+                    <td>${item.materialCategory || '-'}</td>
+                    <td>${item.owner || '-'}</td>
+                    <td>${item.department || '-'}</td>
+                    <td>${item.poNumber || '-'}</td>
+                    <td>${item.supplierCode || '-'}</td>
+                    <td>${item.quantity || '-'}</td>
+                    <td>${item.unit || '-'}</td>
+                    <td>${item.inboundTime || '-'}</td>
+                    <td>${item.inboundNo || '-'}</td>
+                    <td><span style="color:var(--jc-success-green);font-weight:600;">${item.remainingStock}</span></td>
+                    <td>${item.ageingDays ? item.ageingDays + '天' : '-'}</td>
+                    <td>${item.deadstockDays ? item.deadstockDays + '天' : '-'}</td>
+                    <td>${item.warehouse || '-'}</td>
+                    <td>${item.location || '-'}</td>
+                    <td class="scrap-sticky-qty">
+                        <input type="number" id="scrap-qty-${index}" class="qty-input" style="width:60px;"
+                               min="1" max="${item.remainingStock}" value="1"
+                               data-max="${item.remainingStock}">
+                    </td>
+                    <td class="scrap-sticky-op">
+                        <button class="btn btn-danger btn-sm" onclick="addToScrapCart(${index})" style="padding:4px 8px;font-size:12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // 将当前过滤结果存入临时变量，例"addToScrapCart 使用
+            window._scrapSearchFiltered = filtered;
+        }
+
+        // 搜索按钮事件
+        document.getElementById('scrapSearchBtn').addEventListener('click', function() {
+            renderScrapSearch(document.getElementById('scrapSearchKeyword').value);
+        });
+
+        // Enter 键触发搜索 
+        document.getElementById('scrapSearchKeyword').addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') renderScrapSearch(this.value);
+        });
+
+        // 初始加载全部库存
+        function loadScrapInventory() {
+            renderScrapSearch('');
+        }
+
+        // 添加到报废购物车
+        function addToScrapCart(rowIndex) {
+            const filtered = window._scrapSearchFiltered || Inventory.getAll();
+            const item = filtered[rowIndex];
+            if (!item) return;
+
+            const qtyInput = document.getElementById(`scrap-qty-${rowIndex}`);
+            const qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
+
+            if (isNaN(qty) || qty <= 0 || qty > item.remainingStock) {
+                Toast.error('库存不足或输入报废数量无效！');
+                return;
+            }
+
+            const existing = scrapCart.find(c => c.inboundNo === item.inboundNo);
+            if (existing) {
+                if (existing.scrapQty + qty > item.remainingStock) {
+                    Toast.error(`合并失败：超出现有可用库存总上陙"(${item.remainingStock})！`);
+                    return;
+                }
+                existing.scrapQty += qty;
+            } else {
+                scrapCart.push({ ...item, scrapQty: qty });
+            }
+
+            renderScrapCart();
+            Toast.success(`已添办 ${qty} ${item.unit || ''} [${item.materialName}] 到报废清单`);
+        }
+
+        // 渲染报废购物车表栏 
+        function renderScrapCart() {
+            const tbody = document.getElementById('scrapCartBody');
+            const countEl = document.getElementById('scrapCartCount');
+            countEl.textContent = scrapCart.length;
+
+            if (scrapCart.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="21" style="text-align:center;color:#999;padding:20px;">请从上方库存检索区添加需要报废的物料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = scrapCart.map((item, index) => `
+                <tr>
+                    <td>${item.materialName}</td>
+                    <td>${item.materialCode || '-'}</td>
+                    <td>${item.applicant || '-'}</td>
+                    <td>${item.projectCode || '-'}</td>
+                    <td>${item.pbu || '-'}</td>
+                    <td>${item.exempt3C || '-'}</td>
+                    <td>${item.materialCategory || '-'}</td>
+                    <td>${item.owner || '-'}</td>
+                    <td>${item.department || '-'}</td>
+                    <td>${item.poNumber || '-'}</td>
+                    <td>${item.supplierCode || '-'}</td>
+                    <td><strong style="color:var(--jc-danger-red);">${item.scrapQty}</strong></td>
+                    <td>${item.unit || '-'}</td>
+                    <td>${item.inboundTime || '-'}</td>
+                    <td>${item.inboundNo || '-'}</td>
+                    <td>${item.remainingStock}</td>
+                    <td>${item.ageingDays ? item.ageingDays + '天' : '-'}</td>
+                    <td>${item.deadstockDays ? item.deadstockDays + '天' : '-'}</td>
+                    <td>${item.warehouse || '-'}</td>
+                    <td>${item.location || '-'}</td>
+                    <td class="scrap-cart-sticky-op">
+                        <i class="fas fa-times-circle" style="color:var(--jc-danger-red);cursor:pointer;font-size:16px;"
+                           onclick="removeFromScrapCart(${index})" title="移除"></i>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 从报废购物车移除
+        function removeFromScrapCart(index) {
+            scrapCart.splice(index, 1);
+            renderScrapCart();
+        }
+
+        // 提交报废申请
+        document.getElementById('submitScrapBtn').addEventListener('click', function() {
+            if (scrapCart.length === 0) {
+                Toast.error('报废清单为空，请先添加需要报废的物料）');
+                return;
+            }
+
+            const orderNoEl = document.getElementById('scrapOrderNo');
+            if (!orderNoEl.value.trim()) {
+                Toast.error('请填写报废单号！');
+                orderNoEl.style.borderColor = 'var(--jc-danger-red)';
+                orderNoEl.focus();
+                return;
+            } else {
+                orderNoEl.style.borderColor = '';
+            }
+
+            const filesEl = document.getElementById('scrapFiles');
+            if (filesEl.files.length === 0) {
+                Toast.error('请上传报废凭证附件！');
+                filesEl.style.borderColor = 'var(--jc-danger-red)';
+                return;
+            } else {
+                filesEl.style.borderColor = '';
+            }
+
+            const btn = this;
+            ButtonUtils.setLoading(btn, '系统流转处理中...');
+
+            const user = Users.getCurrentUser();
+            const formData = {
+                items: scrapCart,
+                scrapOrderNo: orderNoEl.value.trim(),
+                applicant: user ? user.name : '未知',
+                department: user ? (user.department || '') : '',
+                attachments: Array.from(filesEl.files).map(f => f.name),
+                approver: document.getElementById('scrapApprover').value
+            };
+
+            setTimeout(() => {
+                const flow = Flows.create('outbound_scrap', formData);
+                const summary = scrapCart.map(c => `${c.materialName}(${c.scrapQty})`).join('、');
+                ButtonUtils.setSuccess(btn, '提交成功');
+                Toast.success(`报废单 ${flow.flowNo} 已成功提交至您的部门经理进行审批！`);
+
+                scrapCart = [];
+                renderScrapCart();
+                orderNoEl.value = '';
+                filesEl.value = '';
+
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> 提交报废并流转审批';
+                    btn.disabled = false;
+                }, 2000);
+            }, 800);
+        });
+
+        // 侧边栏折叠 
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // 退出登录 
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 500);
+            });
+        });
+
+        // 初始区 
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadInventory();
+            loadScrapInventory();
+        });
+    </script>
+</body>
+</html>

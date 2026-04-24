@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 登录页专用样式 */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--jc-primary-blue) 0%, #001a33 100%);
+            padding: 20px;
+        }
+
+        .login-container {
+            display: flex;
+            width: 100%;
+            max-width: 1000px;
+            min-height: 560px;
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-modal);
+            overflow: hidden;
+        }
+
+        /* 左侧品牌区域 */
+        .login-brand {
+            flex: 1;
+            background: linear-gradient(135deg, var(--jc-primary-blue) 0%, #004080 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+            color: #fff;
+            text-align: center;
+        }
+
+        .login-brand-logo {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+        }
+
+        .login-brand-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .login-brand-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .login-brand-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+        }
+
+        .login-brand-features {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            text-align: left;
+        }
+
+        .login-brand-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .login-brand-feature i {
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* 右侧表单区域 */
+        .login-form-wrapper {
+            flex: 1;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-form-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--jc-text-dark);
+            margin-bottom: 8px;
+        }
+
+        .login-form-subtitle {
+            font-size: 14px;
+            color: var(--jc-text-light);
+        }
+
+        .login-form {
+            width: 100%;
+        }
+
+        .login-form .form-group {
+            margin-bottom: 24px;
+        }
+
+        .login-form .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--jc-text-dark);
+            margin-bottom: 8px;
+        }
+
+        .login-form .input-group {
+            position: relative;
+        }
+
+        .login-form .input-group-text {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            color: var(--jc-text-muted);
+            z-index: 2;
+        }
+
+        .login-form .form-control {
+            padding-left: 48px;
+            height: 48px;
+            font-size: 15px;
+            border-radius: var(--jc-radius-control);
+        }
+
+        .login-form .form-control:focus + .input-group-text,
+        .login-form .form-control:focus ~ .input-group-text {
+            color: var(--jc-accent-teal);
+        }
+
+        /* 角色选择 */
+        .role-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .role-option {
+            flex: 1;
+            padding: 16px 12px;
+            border: 2px solid var(--jc-border-line);
+            border-radius: var(--jc-radius-control);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--jc-transition-fast);
+        }
+
+        .role-option:hover {
+            border-color: var(--jc-accent-teal);
+        }
+
+        .role-option.active {
+            border-color: var(--jc-accent-teal);
+            background: var(--jc-accent-teal-light);
+        }
+
+        .role-option i {
+            font-size: 24px;
+            color: var(--jc-text-muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .role-option.active i {
+            color: var(--jc-accent-teal);
+        }
+
+        .role-option span {
+            font-size: 13px;
+            color: var(--jc-text-light);
+            display: block;
+        }
+
+        .role-option.active span {
+            color: var(--jc-accent-teal);
+            font-weight: 600;
+        }
+
+        /* 登录按钮 */
+        .login-btn {
+            width: 100%;
+            height: 48px;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* 快捷登录提示 */
+        .quick-login-hint {
+            margin-top: 30px;
+            padding-top: 24px;
+            border-top: 1px solid var(--jc-border-line-light);
+        }
+
+        .quick-login-title {
+            font-size: 12px;
+            color: var(--jc-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .quick-login-accounts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-login-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid var(--jc-border-line);
+            background: var(--jc-bg-gray);
+            color: var(--jc-text-light);
+            border-radius: var(--jc-radius-tag);
+            cursor: pointer;
+            transition: all var(--jc-transition-fast);
+        }
+
+        .quick-login-btn:hover {
+            border-color: var(--jc-accent-teal);
+            color: var(--jc-accent-teal);
+            background: var(--jc-accent-teal-light);
+        }
+
+        /* 版权信息 */
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: var(--jc-text-muted);
+        }
+
+        /* 错误提示 */
+        .login-error {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--jc-danger-red-light);
+            border: 1px solid rgba(230, 57, 70, 0.2);
+            border-radius: var(--jc-radius-control);
+            color: var(--jc-danger-red);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .login-error.show {
+            display: flex;
+        }
+
+        /* 震动动画 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                max-width: 400px;
+            }
+
+            .login-brand {
+                padding: 40px 30px;
+                min-height: auto;
+            }
+
+            .login-brand-logo {
+                width: 70px;
+                height: 70px;
+            }
+
+            .login-brand-logo i {
+                font-size: 32px;
+            }
+
+            .login-brand-title {
+                font-size: 22px;
+            }
+
+            .login-brand-features {
+                display: none;
+            }
+
+            .login-form-wrapper {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-container">
+            <!-- 左侧品牌区域 -->
+            <div class="login-brand">
+                <div class="login-brand-logo">
+                    <img src="802a6.webp" alt="仓库图标">
+                </div>
+                <h1 class="login-brand-title">myPrototype</h1>
+                <p class="login-brand-subtitle">仓储与样机试制管理系统</p>
+                <div class="login-brand-features">
+                    <div class="login-brand-feature">
+                        <i class="fas fa-check"></i>
+                        <span>智能化仓储管理</span>
+                    </div>
+                    <div class="login-brand-feature">
+                        <i class="fas fa-check"></i>
+                        <span>全流程审批跟踪</span>
+                    </div>
+                    <div class="login-brand-feature">
+                        <i class="fas fa-check"></i>
+                        <span>多维度数据查询</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧表单区域 -->
+            <div class="login-form-wrapper">
+                <div class="login-form-header">
+                    <h2 class="login-form-title">欢迎登录</h2>
+                    <p class="login-form-subtitle">请使用您的账号密码登录系统</p>
+                </div>
+
+                <div class="login-error" id="loginError">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorMessage">用户名或密码错误</span>
+                </div>
+
+                <form class="login-form" id="loginForm">
+                    <!-- 角色选择 -->
+                    <div class="role-selector">
+                        <div class="role-option active" data-role="admin">
+                            <i class="fas fa-user-shield"></i>
+                            <span>系统管理员</span>
+                        </div>
+                        <div class="role-option" data-role="keeper">
+                            <i class="fas fa-boxes"></i>
+                            <span>仓管员</span>
+                        </div>
+                        <div class="role-option" data-role="engineer">
+                            <i class="fas fa-user-cog"></i>
+                            <span>工程师</span>
+                        </div>
+                    </div>
+
+                    <!-- 用户名 -->
+                    <div class="form-group">
+                        <label class="form-label">用户名</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" class="form-control" name="username" id="username" 
+                                   placeholder="请输入用户名" autocomplete="username">
+                        </div>
+                    </div>
+
+                    <!-- 密码 -->
+                    <div class="form-group">
+                        <label class="form-label">密码</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" name="password" id="password" 
+                                   placeholder="请输入密码" autocomplete="current-password">
+                        </div>
+                    </div>
+
+                    <!-- 登录按钮 -->
+                    <button type="submit" class="btn btn-primary login-btn" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> 登 录
+                    </button>
+                </form>
+
+                <!-- 快捷登录提示 -->
+                <div class="quick-login-hint">
+                    <div class="quick-login-title">测试账号快速登录</div>
+                    <div class="quick-login-accounts">
+                        <button class="quick-login-btn" data-user="admin" data-pass="admin123">管理员</button>
+                        <button class="quick-login-btn" data-user="keeper01" data-pass="keeper123">仓管员</button>
+                        <button class="quick-login-btn" data-user="engineer01" data-pass="engineer123">工程师</button>
+                    </div>
+                </div>
+
+                <div class="login-footer">
+                    © 2026 myPrototype. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/data.js"></script>
+    <script>
+        // 角色选择
+        document.querySelectorAll('.role-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.role-option').forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 自动填充对应角色的测试账号
+                const role = this.dataset.role;
+                const roleAccounts = {
+                    admin: { user: 'admin', pass: 'admin123' },
+                    keeper: { user: 'keeper01', pass: 'keeper123' },
+                    engineer: { user: 'engineer01', pass: 'engineer123' }
+                };
+                
+                if (roleAccounts[role]) {
+                    document.getElementById('username').value = roleAccounts[role].user;
+                    document.getElementById('password').value = roleAccounts[role].pass;
+                }
+            });
+        });
+
+        // 快捷登录按钮
+        document.querySelectorAll('.quick-login-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.getElementById('username').value = this.dataset.user;
+                document.getElementById('password').value = this.dataset.pass;
+                
+                // 更新角色选中状态
+                const user = this.dataset.user;
+                let role = 'admin';
+                if (user.includes('keeper')) role = 'keeper';
+                if (user.includes('engineer')) role = 'engineer';
+                
+                document.querySelectorAll('.role-option').forEach(o => {
+                    o.classList.toggle('active', o.dataset.role === role);
+                });
+            });
+        });
+
+        // 输入时隐藏错误提示
+        document.getElementById('username').addEventListener('input', hideError);
+        document.getElementById('password').addEventListener('input', hideError);
+
+        function hideError() {
+            document.getElementById('loginError').classList.remove('show');
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('loginError');
+            document.getElementById('errorMessage').textContent = message;
+            errorEl.classList.add('show');
+            
+            // 添加震动效果
+            const form = document.getElementById('loginForm');
+            form.classList.add('shake');
+            setTimeout(() => form.classList.remove('shake'), 500);
+        }
+
+        // 登录表单提交
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            // 验证
+            if (!username) {
+                showError('请输入用户名');
+                document.getElementById('username').focus();
+                return;
+            }
+            
+            if (!password) {
+                showError('请输入密码');
+                document.getElementById('password').focus();
+                return;
+            }
+            
+            // 设置按钮加载状态
+            const btn = document.getElementById('loginBtn');
+            ButtonUtils.setLoading(btn, '登录中...');
+            
+            // 模拟登录请求
+            setTimeout(() => {
+                const result = Users.login(username, password);
+                
+                if (result.success) {
+                    Toast.success('登录成功，正在跳转...');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 800);
+                } else {
+                    ButtonUtils.reset(btn);
+                    showError(result.message);
+                }
+            }, 600);
+        });
+
+        // 页面加载时默认选中管理员并填充
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('username').value = 'admin';
+            document.getElementById('password').value = 'admin123';
+        });
+    </script>
+</body>
+</html>

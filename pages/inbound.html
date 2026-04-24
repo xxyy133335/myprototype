@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>入库管理 - myPrototype仓储与试制管理系统</title>
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/layout.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Tab 样式优化 */
+        .inbound-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--jc-border-line);
+            margin-bottom: var(--jc-spacing-xl);
+            background: var(--jc-card-white);
+            padding: 0 var(--jc-spacing-xl);
+            border-radius: var(--jc-radius-card) var(--jc-radius-card) 0 0;
+        }
+
+        .inbound-tab {
+            padding: var(--jc-spacing-md) var(--jc-spacing-xl);
+            font-size: var(--jc-font-size-body);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-light);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all var(--jc-transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .inbound-tab:hover {
+            color: var(--jc-accent-teal);
+        }
+
+        .inbound-tab.active {
+            color: var(--jc-accent-teal);
+            border-bottom-color: var(--jc-accent-teal);
+        }
+
+        .inbound-tab i {
+            font-size: 16px;
+        }
+
+        /* 表单区域 */
+        .form-section {
+            background: var(--jc-card-white);
+            border-radius: var(--jc-radius-card);
+            box-shadow: var(--jc-shadow-card);
+            padding: var(--jc-spacing-2xl);
+        }
+
+        .form-section-title {
+            font-size: var(--jc-font-size-card-title);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+            margin-bottom: var(--jc-spacing-xl);
+            padding-bottom: var(--jc-spacing-md);
+            border-bottom: 1px solid var(--jc-border-line-light);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .form-section-title i {
+            color: var(--jc-accent-teal);
+        }
+
+        /* 表单网格 */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--jc-spacing-lg);
+        }
+
+        @media (max-width: 1200px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group.half-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 1200px) {
+            .form-group.half-width {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-group.half-width {
+                grid-column: 1;
+            }
+        }
+
+        /* 按钮统"*/
+        .form-actions {
+            display: flex;
+            gap: var(--jc-spacing-md);
+            margin-top: var(--jc-spacing-xl);
+            padding-top: var(--jc-spacing-xl);
+            border-top: 1px solid var(--jc-border-line-light);
+        }
+
+        /* 表单工具栏"*/
+        .form-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--jc-spacing-lg);
+            padding-bottom: var(--jc-spacing-md);
+            border-bottom: 1px solid var(--jc-border-line-light);
+        }
+
+        .toolbar-title {
+            font-size: var(--jc-font-size-body);
+            font-weight: var(--jc-font-weight-semibold);
+            color: var(--jc-text-dark);
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: var(--jc-spacing-sm);
+        }
+
+        .toolbar-right .btn {
+            padding: 8px 16px;
+            font-size: var(--jc-font-size-small);
+        }
+
+        /* 最近入库记录"*/
+        .recent-records {
+            margin-top: var(--jc-spacing-xl);
+        }
+
+        /* 工程师入库简化提示"*/
+        .engineer-hint {
+            background: var(--jc-accent-teal-light);
+            border-left: 4px solid var(--jc-accent-teal);
+            padding: var(--jc-spacing-md) var(--jc-spacing-lg);
+            border-radius: 0 var(--jc-radius-control) var(--jc-radius-control) 0;
+            margin-bottom: var(--jc-spacing-xl);
+            display: flex;
+            align-items: center;
+            gap: var(--jc-spacing-md);
+        }
+
+        .engineer-hint i {
+            font-size: 20px;
+            color: var(--jc-accent-teal);
+        }
+
+        .engineer-hint-text {
+            font-size: var(--jc-font-size-body);
+            color: var(--jc-text-dark);
+        }
+
+        /* 隐藏字段提示 */
+        .hidden-fields-info {
+            background: var(--jc-bg-gray);
+            border-radius: var(--jc-radius-control);
+            padding: var(--jc-spacing-md) var(--jc-spacing-lg);
+            margin-top: var(--jc-spacing-lg);
+            font-size: var(--jc-font-size-small);
+            color: var(--jc-text-light);
+        }
+
+        .hidden-fields-info i {
+            color: var(--jc-accent-teal);
+            margin-right: var(--jc-spacing-xs);
+        }
+
+        /* 动态必填样式"*/
+        .dynamic-required .form-label::after {
+            content: ' *';
+            color: var(--jc-danger-red);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="../802a6.webp" alt="Logo">
+                    <span>myPrototype</span>
+                </div>
+            </div>
+            
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">仓库管理 Warehouse</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="../dashboard.html" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>工作台看板</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inbound.html" class="nav-link active">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>入库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="outbound.html" class="nav-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>出库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="transfer.html" class="nav-link">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span>移库</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="query.html" class="nav-link">
+                                <i class="fas fa-search"></i>
+                                <span>综合查询</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="inventory.html" class="nav-link planned">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span>盘点</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="express.html" class="nav-link">
+                                <i class="fas fa-shipping-fast"></i>
+                                <span>快递发运</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="scrap.html" class="nav-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>报废处理</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="qrcode.html" class="nav-link">
+                                <i class="fas fa-qrcode"></i>
+                                <span>二维码系统</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="config.html" class="nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>仓库配置</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">样机试制 Prototyping</div>
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="prototype.html" class="nav-link planned">
+                                <i class="fas fa-cogs"></i>
+                                <span>样机试制/改工</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="tooling.html" class="nav-link planned">
+                                <i class="fas fa-tools"></i>
+                                <span>工装制作</span>
+                                <span class="nav-badge-soon">规划中</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" id="userName">管理员</div>
+                        <div class="user-role" id="userRole">系统管理员</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <nav class="breadcrumb">
+                        <a href="../dashboard.html">首页</a>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-current">入库管理</span>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <div class="header-action" title="通知">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge"></span>
+                    </div>
+                    <div class="header-action" title="退出登录" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 内容区域 -->
+            <div class="content-wrapper">
+                <div class="content-container">
+                    <!-- 页面标题 -->
+                    <div class="page-header">
+                        <div class="page-header-content">
+                            <div>
+                                <h1 class="page-title">入库管理</h1>
+                                <p class="page-description">物资入库登记与批量导入</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 切换 -->
+                    <div class="inbound-tabs">
+                        <div class="inbound-tab active" data-tab="keeper">
+                            <i class="fas fa-user-cog"></i>
+                            <span>仓管员入库</span>
+                        </div>
+                        <div class="inbound-tab" data-tab="engineer">
+                            <i class="fas fa-user"></i>
+                            <span>工程师入库</span>
+                        </div>
+                    </div>
+
+                    <!-- 仓管员入库 -->
+                    <div class="tab-content active" id="keeperTab">
+                        <div class="form-section">
+                            <div class="form-toolbar">
+                                <div class="toolbar-title">单条录入</div>
+                                <div class="toolbar-right">
+                                    <button class="btn btn-outline btn-download-keeper">
+                                        <i class="fas fa-download"></i> 导出模板
+                                    </button>
+                                    <button class="btn btn-outline btn-import-keeper" onclick="document.getElementById('importKeeper').click()">
+                                        <i class="fas fa-file-upload"></i> 批量导入
+                                    </button>
+                                    <input type="file" id="importKeeper" style="display: none;" accept=".xlsx,.xls,.csv">
+                                </div>
+                            </div>
+                            <div class="form-section-title">
+                                <i class="fas fa-edit"></i>
+                                入库信息录入
+                            </div>
+                            <form id="keeperForm">
+                                <div class="form-grid">
+                                    <!-- 物料名称 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">物料名称</label>
+                                        <input type="text" class="form-control" name="materialName" placeholder="请输入物料名称" required>
+                                    </div>
+
+                                    <!-- 物料编号 -->
+                                    <div class="form-group" id="materialCodeGroup">
+                                        <label class="form-label" id="materialCodeLabel">物料编号</label>
+                                        <input type="text" class="form-control" name="materialCode" id="materialCode" placeholder="请输入物料编号">
+                                    </div>
+
+                                    <!-- 项目编号 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">项目编号</label>
+                                        <input type="text" class="form-control" name="projectCode" placeholder="请输入项目编号" required>
+                                    </div>
+
+                                    <!-- PBU -->
+                                    <div class="form-group">
+                                        <label class="form-label required">PBU</label>
+                                        <select class="form-control" name="pbu" required>
+                                            <option value="">请选择</option>
+                                            <option value="PBU-A">PBU-A</option>
+                                            <option value="PBU-B">PBU-B</option>
+                                            <option value="PBU-C">PBU-C</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 免3C -->
+                                    <div class="form-group">
+                                        <label class="form-label required">免3C</label>
+                                        <select class="form-control" name="exempt3C" required>
+                                            <option value="">请选择</option>
+                                            <option value="是">是</option>
+                                            <option value="否">否</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 物料类别 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">物料类别</label>
+                                        <select class="form-control" name="materialCategory" id="materialCategory" required>
+                                            <option value="">请选择</option>
+                                            <option value="室外机">室外机</option>
+                                            <option value="室内机">室内机</option>
+                                            <option value="压缩机">压缩机</option>
+                                            <option value="控制箱">控制箱</option>
+                                            <option value="工装">工装</option>
+                                            <option value="化学品">化学品</option>
+                                            <option value="新物料">新物料</option>
+                                            <option value="拆机物料">拆机物料</option>
+                                            <option value="工具辅料">工具辅料</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 所属人 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">所属人</label>
+                                        <input type="text" class="form-control" name="owner" placeholder="请输入所属人" required>
+                                    </div>
+
+                                    <!-- 所属部门 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">所属部门</label>
+                                        <input type="text" class="form-control" name="department" placeholder="请输入所属部门" required>
+                                    </div>
+
+                                    <!-- PO号 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">PO号</label>
+                                        <input type="text" class="form-control" name="poNumber" placeholder="请输入PO号" required>
+                                    </div>
+
+                                    <!-- 供应商编号 -->
+                                    <div class="form-group">
+                                        <label class="form-label">供应商编号</label>
+                                        <input type="text" class="form-control" name="supplierCode" placeholder="请输入供应商编号">
+                                    </div>
+
+                                    <!-- 数量 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">数量</label>
+                                        <input type="number" class="form-control" name="quantity" placeholder="请输入数量" min="1" step="1" required>
+                                    </div>
+
+                                    <!-- 单位 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">单位</label>
+                                        <select class="form-control" name="unit" required>
+                                            <option value="">请选择</option>
+                                            <option value="PCS">PCS</option>
+                                            <option value="KG">KG</option>
+                                            <option value="套">套</option>
+                                            <option value="米">米</option>
+                                            <option value="升">升</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 仓库 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">仓库</label>
+                                        <select class="form-control" name="warehouse" id="warehouse" required>
+                                            <option value="">请选择</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                            <option value="E">E</option>
+                                            <option value="F">F</option>
+                                            <option value="G">G</option>
+                                            <option value="H">H</option>
+                                            <option value="I">I</option>
+                                            <option value="J">J</option>
+                                            <option value="K">K</option>
+                                            <option value="研发中心实验室仓">研发中心实验室仓</option>
+                                            <option value="原材料一仓">原材料一仓</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 货位 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">货位</label>
+                                        <input type="text" class="form-control" name="location" id="location" list="locationList" placeholder="请输入货位（如 A-0-0-0-0）" required>
+                                        <datalist id="locationList">
+                                            <option value="A-0-0-0-0">
+                                            <option value="A-0-0-0-1">
+                                            <option value="A-0-0-0-2">
+                                            <option value="B-0-0-0-0">
+                                            <option value="B-0-0-0-1">
+                                            <option value="B-0-0-0-2">
+                                            <option value="C-0-0-0-0">
+                                            <option value="C-0-0-0-1">
+                                            <option value="C-0-0-0-2">
+                                        </datalist>
+                                    </div>
+
+                                    <!-- 单价 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">单价</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">¥</span>
+                                            <input type="number" class="form-control" name="unitPrice" placeholder="0.00" min="0" step="0.01" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                                        <i class="fas fa-save"></i> 提交入库
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="resetBtn">
+                                        <i class="fas fa-undo"></i> 重置信息
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- 最近入库记录 -->
+                        <div class="card recent-records">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-history"></i>
+                                    最近入库记录 
+                                </div>
+                            </div>
+                            <div class="card-body" style="padding: 0;">
+                                <div class="table-container">
+                                    <table class="table" id="recentTable">
+                                        <thead>
+                                            <tr>
+                                                <th>入库单号</th>
+                                                <th>物料名称</th>
+                                                <th>物料编号</th>
+                                                <th>数量</th>
+                                                <th>仓库</th>
+                                                <th>货位</th>
+                                                <th>入库时间</th>
+                                                <th>操作了</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- 动态生或 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 工程师入库 -->
+                    <div class="tab-content" id="engineerTab">
+                        <div class="form-section">
+                            <div class="engineer-hint">
+                                <i class="fas fa-info-circle"></i>
+                                <div class="engineer-hint-text">
+                                    工程师入库为简化流程，仅需填写基础信息，提交后将生成电子流转至仓管员补充仓库和货位信息。 
+                                </div>
+                            </div>
+
+                            <div class="form-toolbar">
+                                <div class="toolbar-title">单条录入</div>
+                                <div class="toolbar-right">
+                                    <button class="btn btn-outline btn-download-engineer">
+                                        <i class="fas fa-download"></i> 导出模板
+                                    </button>
+                                    <button class="btn btn-outline btn-import-engineer" onclick="document.getElementById('importEngineer').click()">
+                                        <i class="fas fa-file-upload"></i> 批量导入
+                                    </button>
+                                    <input type="file" id="importEngineer" style="display: none;" accept=".xlsx,.xls,.csv">
+                                </div>
+                            </div>
+                            <div class="form-section-title">
+                                <i class="fas fa-edit"></i>
+                                入库信息录入
+                            </div>
+                            <form id="engineerForm">
+                                <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                                    <!-- 物料名称 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">物料名称</label>
+                                        <input type="text" class="form-control" name="materialName" placeholder="请输入物料名称" required>
+                                    </div>
+
+                                    <!-- 项目编号 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">项目编号</label>
+                                        <input type="text" class="form-control" name="projectCode" placeholder="请输入项目编号" required>
+                                    </div>
+
+                                    <!-- PBU -->
+                                    <div class="form-group">
+                                        <label class="form-label required">PBU</label>
+                                        <select class="form-control" name="pbu" required>
+                                            <option value="">请选择</option>
+                                            <option value="PBU-A">PBU-A</option>
+                                            <option value="PBU-B">PBU-B</option>
+                                            <option value="PBU-C">PBU-C</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 免3C -->
+                                    <div class="form-group">
+                                        <label class="form-label required">免3C</label>
+                                        <select class="form-control" name="exempt3C" required>
+                                            <option value="">请选择</option>
+                                            <option value="是">是</option>
+                                            <option value="否">否</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- PO号 -->
+                                    <div class="form-group">
+                                        <label class="form-label">PO号</label>
+                                        <input type="text" class="form-control" name="poNumber" list="poList" placeholder="可输入或选择 (如  样品)">
+                                        <datalist id="poList">
+                                            <option value="样品">
+                                        </datalist>
+                                    </div>
+
+                                    <!-- 供应商编号 -->
+                                    <div class="form-group">
+                                        <label class="form-label">供应商编号</label>
+                                        <input type="text" class="form-control" name="supplierCode" placeholder="请输入供应商编号">
+                                    </div>
+
+                                    <!-- 数量 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">数量</label>
+                                        <input type="number" class="form-control" name="quantity" placeholder="请输入数量" min="1" step="1" required>
+                                    </div>
+
+                                    <!-- 单位 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">单位</label>
+                                        <select class="form-control" name="unit" required>
+                                            <option value="">请选择</option>
+                                            <option value="PCS">PCS</option>
+                                            <option value="KG">KG</option>
+                                            <option value="套">套</option>
+                                            <option value="米">米</option>
+                                            <option value="升">升</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 单价 -->
+                                    <div class="form-group">
+                                        <label class="form-label required">单价</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">¥</span>
+                                            <input type="number" class="form-control" name="unitPrice" placeholder="0.00" min="0" step="0.01" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="hidden-fields-info">
+                                    <i class="fas fa-magic"></i>
+                                    以下字段将由系统自动填充：申请人、所属人、所属部门（根据登录账号自动获取） 
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary" id="engineerSubmitBtn">
+                                        <i class="fas fa-paper-plane"></i> 提交申请
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" id="engineerResetBtn">
+                                        <i class="fas fa-undo"></i> 重置信息
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/validation.js"></script>
+    <script src="../js/data.js"></script>
+    <script>
+        // 检查登录状态 
+        if (!Users.isLoggedIn()) {
+            window.location.href = '../index.html';
+        }
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const user = Users.getCurrentUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userAvatar').textContent = user.name.charAt(0);
+                
+                const roleMap = {
+                    admin: '系统管理员',
+                    keeper: '仓管员',
+                    engineer: '工程师'
+                };
+                document.getElementById('userRole').textContent = roleMap[user.role] || user.role;
+            }
+        }
+
+        // Tab 切换
+        document.querySelectorAll('.inbound-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.dataset.tab;
+                
+                // 切换 Tab 样式
+                document.querySelectorAll('.inbound-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 切换内容
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.getElementById(targetTab + 'Tab').classList.add('active');
+            });
+        });
+
+        // 物料类别动态必填 
+        const materialCategory = document.getElementById('materialCategory');
+        const materialCode = document.getElementById('materialCode');
+        const materialCodeLabel = document.getElementById('materialCodeLabel');
+        const materialCodeGroup = document.getElementById('materialCodeGroup');
+
+        materialCategory.addEventListener('change', function() {
+            const requiredCategories = ['室外机', '室内机', '压缩机', '控制箱'];
+            const isRequired = requiredCategories.includes(this.value);
+            
+            if (isRequired) {
+                materialCode.setAttribute('required', 'required');
+                materialCodeLabel.classList.add('required');
+                materialCode.placeholder = '请输入物料编号（必填）';
+            } else {
+                materialCode.removeAttribute('required');
+                materialCodeLabel.classList.remove('required');
+                materialCode.placeholder = '请输入物料编号';
+                FormUtils.clearFieldError(materialCode);
+            }
+        });
+
+        // 仓库联动货位
+        const warehouseSelect = document.getElementById('warehouse');
+        const locationInput = document.getElementById('location');
+
+        warehouseSelect.addEventListener('change', function() {
+            if (this.value) {
+                locationInput.placeholder = `请输入货位（如 ${this.value}-0-0-0-0）`;
+            }
+        });
+
+        // 仓管员入库表单提了 
+        document.getElementById('keeperForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 验证物料编号
+            const category = materialCategory.value;
+            const code = materialCode.value;
+            const codeValidation = BusinessValidation.validateMaterialCode(category, code);
+            
+            if (!codeValidation.valid) {
+                FormUtils.setFieldError(materialCode, codeValidation.message);
+                materialCode.focus();
+                return;
+            }
+            
+            // 表单验证
+            const formData = FormUtils.serialize(this);
+            const user = Users.getCurrentUser();
+            
+            // 添加系统字段
+            formData.applicant = user.name;
+            formData.inboundTime = DateUtils.now();
+            
+            // 设置按钮加载状态 
+            const btn = document.getElementById('submitBtn');
+            ButtonUtils.setLoading(btn, '提交中...');
+            
+            // 模拟提交
+            setTimeout(() => {
+                const result = Inventory.add(formData);
+                ButtonUtils.setSuccess(btn, '提交成功');
+                Toast.success(`入库升 ${result.inboundNo} 创建成功`);
+                
+                // 重置表单
+                FormUtils.reset(this);
+                
+                // 刷新最近记录 
+                loadRecentRecords();
+            }, 800);
+        });
+
+        // 仓管员表单重置 
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            FormUtils.reset(document.getElementById('keeperForm'));
+            materialCodeLabel.classList.remove('required');
+            materialCode.placeholder = '请输入物料编号';
+        });
+
+        // 工程师入库表单提了 
+        document.getElementById('engineerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = FormUtils.serialize(this);
+            const user = Users.getCurrentUser();
+            
+            // 添加自动填充字段
+            formData.applicant = user.name;
+            formData.owner = user.name;
+            formData.department = user.department;
+            
+            // 设置按钮加载状态 
+            const btn = document.getElementById('engineerSubmitBtn');
+            ButtonUtils.setLoading(btn, '提交中...');
+            
+            // 创建流程
+            setTimeout(() => {
+                const flow = Flows.create('inbound_engineer', formData);
+                ButtonUtils.setSuccess(btn, '提交成功');
+                Toast.success(`入库申请 ${flow.flowNo} 已提交，等待仓管员处理`);
+                
+                // 重置表单
+                FormUtils.reset(this);
+            }, 800);
+        });
+
+        // 工程师表单重置 
+        document.getElementById('engineerResetBtn').addEventListener('click', function() {
+            FormUtils.reset(document.getElementById('engineerForm'));
+        });
+
+        // 加载最近入库记录 
+        function loadRecentRecords() {
+            const records = Inventory.getAll().slice(-5).reverse();
+            const tbody = document.querySelector('#recentTable tbody');
+            
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding: 40px; color: var(--jc-text-muted);">暂无入库记录</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = records.map(record => `
+                <tr>
+                    <td>${record.inboundNo}</td>
+                    <td>${record.materialName}</td>
+                    <td>${record.materialCode || '-'}</td>
+                    <td>${record.quantity}</td>
+                    <td>${record.warehouse}</td>
+                    <td>${record.location}</td>
+                    <td>${DateUtils.format(record.inboundTime, 'YYYY-MM-DD HH:mm')}</td>
+                    <td>${record.applicant}</td>
+                </tr>
+            `).join('');
+        }
+
+        // ================= 导出模板与批量导入"(仓管员入库  =================
+        document.querySelector('.btn-download-keeper').addEventListener('click', function() {
+            Toast.success('仓管员入库模板下载中...');
+            setTimeout(() => {
+                Toast.success('模板文件下载成功');
+            }, 800);
+        });
+
+        const importKeeperInput = document.getElementById('importKeeper');
+        const importKeeperBtn = document.querySelector('.btn-import-keeper');
+        importKeeperInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const fileName = e.target.files[0].name;
+                const originalText = importKeeperBtn.innerHTML;
+                importKeeperBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 数据读取中...';
+                setTimeout(() => {
+                    importKeeperBtn.innerHTML = `<i class="fas fa-check-circle"></i> ${fileName} 导入成功`;
+                    importKeeperBtn.style.borderColor = 'var(--jc-success-green)';
+                    importKeeperBtn.style.color = 'var(--jc-success-green)';
+                    Toast.success(`${fileName} 导入成功`);
+                    setTimeout(() => {
+                        importKeeperBtn.innerHTML = originalText;
+                        importKeeperBtn.style.borderColor = '';
+                        importKeeperBtn.style.color = '';
+                        this.value = '';
+                    }, 3000);
+                }, 800);
+            }
+        });
+
+        // ================= 导出模板与批量导入"(工程师入库  =================
+        document.querySelector('.btn-download-engineer').addEventListener('click', function() {
+            Toast.success('工程师入库模板下载中...');
+            setTimeout(() => {
+                Toast.success('模板文件下载成功');
+            }, 800);
+        });
+
+        const importEngineerInput = document.getElementById('importEngineer');
+        const importEngineerBtn = document.querySelector('.btn-import-engineer');
+        importEngineerInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const fileName = e.target.files[0].name;
+                const originalText = importEngineerBtn.innerHTML;
+                importEngineerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 数据读取中...';
+                setTimeout(() => {
+                    importEngineerBtn.innerHTML = `<i class="fas fa-check-circle"></i> ${fileName} 导入成功`;
+                    importEngineerBtn.style.borderColor = 'var(--jc-success-green)';
+                    importEngineerBtn.style.color = 'var(--jc-success-green)';
+                    Toast.success(`${fileName} 导入成功`);
+                    setTimeout(() => {
+                        importEngineerBtn.innerHTML = originalText;
+                        importEngineerBtn.style.borderColor = '';
+                        importEngineerBtn.style.color = '';
+                        this.value = '';
+                    }, 3000);
+                }, 800);
+            }
+        });
+
+        // 侧边栏折叠 
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        // 退出登录 
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            Modal.confirm('确定要退出登录吗？', () => {
+                Users.logout();
+                Toast.success('已退出登录');
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 500);
+            });
+        });
+
+        // 初始区 
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            loadRecentRecords();
+        });
+    </script>
+</body>
+</html>
